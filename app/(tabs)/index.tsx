@@ -1,98 +1,165 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { View, Text, Image, ScrollView, Pressable } from "react-native";
+import { Link } from "expo-router";
 
 export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ScrollView className="flex-1 bg-black">
+      {/* HERO SECTION com gradiente vermelho dramático */}
+      <View className="relative h-80 overflow-hidden bg-gradient-to-b from-red-950 via-red-900 to-black">
+        {/* Padrão decorativo japonês */}
+        <View className="absolute inset-0 opacity-5">
+          <Text className="text-white text-9xl text-center mt-20">
+            龍虎
+          </Text>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Conteúdo do Hero */}
+        <View className="flex-1 justify-center items-center px-6 pt-14">
+          <View className="items-center">
+
+            {/* Título Principal */}
+            <Text className="text-5xl font-black text-white tracking-wider text-center mb-2">
+              組
+            </Text>
+            <Text className="text-2xl font-bold text-red-500 tracking-widest">
+              KUMI
+            </Text>
+            
+            <View className="h-px w-32 bg-red-600 my-4" />
+            
+            <Text className="text-neutral-400 text-xs tracking-[0.3em] uppercase">
+              Yakuza Brotherhood
+            </Text>
+          </View>
+        </View>
+
+        {/* Detalhes vermelhos laterais */}
+        <View className="absolute left-0 top-40 w-1 h-32 bg-red-600" />
+        <View className="absolute right-0 top-40 w-1 h-32 bg-red-600" />
+      </View>
+
+      {/* CONTEÚDO PRINCIPAL */}
+      <View className="px-6 pt-8">
+        
+        {/* Boas-vindas */}
+        <View className="mb-8">
+          <Text className="text-white text-3xl font-bold mb-2">
+            Bem-vindo, Wakashu
+          </Text>
+          <Text className="text-neutral-400 text-base leading-6">
+            Este é o seu caminho para ascender na hierarquia. Domine os territórios, 
+            complete missões e construa seu império nas sombras de Tóquio.
+          </Text>
+        </View>
+
+        {/* Seção: Hierarquia */}
+        <View className="mb-8">
+          <View className="flex-row items-center mb-4">
+            <Text className="text-red-500 text-lg font-bold">階級</Text>
+            <View className="flex-1 h-px bg-neutral-800 ml-3" />
+          </View>
+          
+          <Text className="text-neutral-300 text-base leading-7 mb-4">
+            O yakuza segue uma estrutura rígida de respeito e lealdade. 
+            Seu rank atual é <Text className="text-red-500 font-bold">若衆 (Wakashu)</Text>, 
+            o primeiro passo na jornada. Acumule <Text className="text-white font-semibold">pontos de lealdade</Text> para 
+            subir para Kyodai e eventualmente tornar-se um Oyabun.
+          </Text>
+        </View>
+
+        {/* Seção: Código Jin-Gi */}
+        <View className="mb-8">
+          <View className="flex-row items-center mb-4">
+            <Text className="text-red-500 text-lg font-bold">仁義</Text>
+            <View className="flex-1 h-px bg-neutral-800 ml-3" />
+          </View>
+          
+          <Text className="text-neutral-300 text-base leading-7 mb-3">
+            Jin-Gi representa os princípios fundamentais do yakuza: humanidade e justiça. 
+            Estes valores guiam cada decisão e ação dentro da organização.
+          </Text>
+
+          <View className="bg-red-950/20 border-l-4 border-red-600 p-4 rounded-r-lg">
+            <Text className="text-neutral-400 text-sm italic leading-6">
+              &quot Lealdade acima de tudo. O código é absoluto. Traição é paga com sangue. 
+              A honra do clã está acima da vida individual. &quot
+            </Text>
+          </View>
+        </View>
+
+        {/* Seção: Operações */}
+        <View className="mb-8">
+          <View className="flex-row items-center mb-4">
+            <Text className="text-red-500 text-lg font-bold">作戦</Text>
+            <View className="flex-1 h-px bg-neutral-800 ml-3" />
+          </View>
+          
+          <Text className="text-neutral-300 text-base leading-7 mb-4">
+            Gerencie seus territórios, coordene seu clã e execute missões estratégicas. 
+            Cada ação fortalece sua posição no submundo.
+          </Text>
+
+          <Link href="/modal" asChild>
+            <Pressable className="active:opacity-70">
+              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
+                <View className="flex-row items-center gap-3">
+                  <Text className="text-white font-semibold text-base">Explorar Territórios</Text>
+                </View>
+                <Text className="text-red-500">→</Text>
+              </View>
+            </Pressable>
+          </Link>
+
+          <Pressable className="active:opacity-70">
+            <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
+              <View className="flex-row items-center gap-3">
+                <Text className="text-white font-semibold text-base">Gerenciar Clã</Text>
+              </View>
+              <Text className="text-neutral-600">→</Text>
+            </View>
+          </Pressable>
+
+          <Pressable className="active:opacity-70">
+            <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800">
+              <View className="flex-row items-center gap-3">
+                <Text className="text-white font-semibold text-base">Mercado Negro</Text>
+              </View>
+              <Text className="text-neutral-600">→</Text>
+            </View>
+          </Pressable>
+        </View>
+
+        {/* Seção: Tatuagens e Tradição */}
+        <View className="mb-8">
+          <View className="flex-row items-center mb-4">
+            <Text className="text-red-500 text-lg font-bold">刺青</Text>
+            <View className="flex-1 h-px bg-neutral-800 ml-3" />
+          </View>
+          
+          <Text className="text-neutral-300 text-base leading-7">
+            As irezumi (tatuagens tradicionais) são símbolos de comprometimento e coragem. 
+            Cobrem o corpo inteiro, exceto mãos, pés e rosto, permitindo que membros 
+            mantenham aparência respeitável em público. Cada desenho conta uma história 
+            de lealdade e sacrifício.
+          </Text>
+        </View>
+
+        {/* Footer com símbolo */}
+        <View className="items-center py-10 mb-6">
+          <View className="flex-row items-center gap-3 mb-3">
+            <View className="w-12 h-px bg-neutral-800" />
+            <Text className="text-neutral-700 text-2xl">龍</Text>
+            <View className="w-12 h-px bg-neutral-800" />
+          </View>
+          <Text className="text-neutral-700 text-xs tracking-[0.25em] mb-1">
+            TOKYO UNDERGROUND
+          </Text>
+          <Text className="text-neutral-800 text-xs">
+            Est. 1945
+          </Text>
+        </View>
+
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
