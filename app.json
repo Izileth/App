@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "App",
-    "slug": "App",
+    "name": "KUMI",
+    "slug": "KUMI",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg",
+    "backgroundColor": "#000000",
     "scheme": "app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,10 +14,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#000000",
+        "foregroundImage": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg",
+        "backgroundImage": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg",
+        "monochromeImage": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
@@ -31,10 +32,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#000000",
           "dark": {
             "backgroundColor": "#000000"
           }
@@ -47,3 +48,4 @@
     }
   }
 }
+

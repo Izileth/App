@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import { Link } from "expo-router";
 
 export default function HomeScreen() {
@@ -99,7 +99,18 @@ export default function HomeScreen() {
             Cada ação fortalece sua posição no submundo.
           </Text>
 
-          <Link href="/modal" asChild>
+          <Link href="/profile" asChild>
+            <Pressable className="active:opacity-70">
+              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
+                <View className="flex-row items-center gap-3">
+                  <Text className="text-white font-semibold text-base">Ver Perfil</Text>
+                </View>
+                <Text className="text-red-500">→</Text>
+              </View>
+            </Pressable>
+          </Link>
+
+          <Link href="/explore" asChild>
             <Pressable className="active:opacity-70">
               <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
                 <View className="flex-row items-center gap-3">
@@ -110,23 +121,27 @@ export default function HomeScreen() {
             </Pressable>
           </Link>
 
-          <Pressable className="active:opacity-70">
-            <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
-              <View className="flex-row items-center gap-3">
-                <Text className="text-white font-semibold text-base">Gerenciar Clã</Text>
+          <Link href="/clan" asChild>
+            <Pressable className="active:opacity-70">
+              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
+                <View className="flex-row items-center gap-3">
+                  <Text className="text-white font-semibold text-base">Gerenciar Clã</Text>
+                </View>
+                <Text className="text-red-500">→</Text>
               </View>
-              <Text className="text-neutral-600">→</Text>
-            </View>
-          </Pressable>
+            </Pressable>
+          </Link>
 
-          <Pressable className="active:opacity-70">
-            <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800">
-              <View className="flex-row items-center gap-3">
-                <Text className="text-white font-semibold text-base">Mercado Negro</Text>
+          <Link href="/market" asChild>
+            <Pressable className="active:opacity-70">
+              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800">
+                <View className="flex-row items-center gap-3">
+                  <Text className="text-white font-semibold text-base">Mercado Negro</Text>
+                </View>
+                <Text className="text-red-500">→</Text>
               </View>
-              <Text className="text-neutral-600">→</Text>
-            </View>
-          </Pressable>
+            </Pressable>
+          </Link>
         </View>
 
         {/* Seção: Tatuagens e Tradição */}
