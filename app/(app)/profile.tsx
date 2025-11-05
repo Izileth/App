@@ -2,10 +2,13 @@ import { View, Text, ScrollView, Pressable } from "react-native";
 import { useState } from "react";
 import { useAuth } from "../auth-context";
 import { playerStats, attributes, achievements, history } from "../../constants/profile-data";
+import { CustomModal } from "../../components/ui/custom-modal";
 
 export default function ProfileScreen() {
   const { logout } = useAuth();
   const [selectedTab, setSelectedTab] = useState("stats");
+  const [isModalVisible, setModalVisible] = useState(false);
+
 
 
 
@@ -368,6 +371,13 @@ export default function ProfileScreen() {
           </View>
         )}
 
+        {/* Modal Button */}
+        <Pressable onPress={() => setModalVisible(true)} className="active:opacity-70 mt-4">
+          <View className="bg-blue-900/50 border border-blue-800 rounded-lg py-3 items-center">
+            <Text className="text-blue-400 font-bold text-sm">Open Modal</Text>
+          </View>
+        </Pressable>
+
         {/* Logout Button */}
         <Pressable onPress={logout} className="active:opacity-70 mt-8 mb-4">
           <View className="bg-red-900/50 border border-red-800 rounded-lg py-3 items-center">
@@ -387,6 +397,15 @@ export default function ProfileScreen() {
           </Text>
         </View>
       </View>
+      <CustomModal 
+        visible={isModalVisible} 
+        onClose={() => setModalVisible(false)}
+        title="Título do Modal"
+        titleJP="警告" // Opcional
+      >
+        <Text className="text-white">Conteúdo aqui</Text>
+      </CustomModal>
+      
     </ScrollView>
   );
 }

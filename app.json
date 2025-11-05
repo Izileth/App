@@ -19,9 +19,9 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg",
-        "backgroundImage": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg",
-        "monochromeImage": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg"
+        "foregroundImage": "./assets/images/ad.icon.png",
+        "backgroundImage": "./assets/images/ad.icon.png",
+        "monochromeImage": "./assets/images/ad.icon.png"
       },
       "package": "com.kawak.Tsumi",
       "edgeToEdgeEnabled": true,
