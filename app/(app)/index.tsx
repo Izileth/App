@@ -19,10 +19,10 @@ export default function HomeScreen() {
 
             {/* Título Principal */}
             <Text className="text-5xl font-black text-white tracking-wider text-center mb-2">
-              組
+              罪
             </Text>
             <Text className="text-2xl font-bold text-red-500 tracking-widest">
-              KUMI
+              TSUMI
             </Text>
             
             <View className="h-px w-32 bg-red-600 my-4" />

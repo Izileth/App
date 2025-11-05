@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "KUMI",
-    "slug": "KUMI",
+    "name": "TSUMI",
+    "slug": "Tsumi",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "https://i.pinimg.com/1200x/b0/4c/2c/b04c2cf4c6130897812a2dbbf3e1cdae.jpg",
+    "icon": "./assets/images/ad.icon.png",
     "backgroundColor": "#000000",
     "scheme": "app",
     "userInterfaceStyle": "automatic",

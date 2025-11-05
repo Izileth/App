@@ -39,7 +39,7 @@ const InitialLayout = () => {
   return (
     <>
       <Slot />
-      <StatusBar style="auto" />
+      <StatusBar style="light" backgroundColor="#000000" />
     </>
   );
 };

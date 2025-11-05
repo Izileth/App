@@ -1,28 +1,45 @@
 import { View, Text, TextInput, Pressable } from "react-native";
 import { useState } from "react";
-import { useAuth } from "./auth-context";
 import { Link } from "expo-router";
-import { User, Lock, Eye, EyeOff } from "lucide-react-native";
+import { User, Lock, Eye, EyeOff, Mail } from "lucide-react-native";
 
-export default function LoginScreen() {
-  const { login } = useAuth();
+export default function RegisterScreen() {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleLogin = () => {
+  const handleRegister = () => {
     setErrorMessage(""); // Clear previous errors
-    if (!username || !password) {
+
+    if (!username || !email || !password || !confirmPassword) {
       setErrorMessage("Por favor, preencha todos os campos.");
       return;
     }
-    if (username === "kumi" && password === "yakuza") {
-      login();
-    } else {
-      setErrorMessage("Usuário ou senha inválidos.");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage("Por favor, insira um email válido.");
+      return;
     }
+
+    if (password.length < 6) {
+      setErrorMessage("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("As senhas não coincidem.");
+      return;
+    }
+
+    // If all validations pass, proceed with registration logic
+    console.log("Registration data:", { username, email, password });
+    // Here you would typically call an authentication service
   };
 
   return (
@@ -57,6 +74,20 @@ export default function LoginScreen() {
             />
           </View>
 
+          {/* Email */}
+          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+            <Mail size={20} color="#666666" strokeWidth={2} />
+            <TextInput
+              placeholder="Email"
+              placeholderTextColor="#666"
+              value={email}
+              onChangeText={(text) => { setEmail(text); setErrorMessage(""); }}
+              className="flex-1 text-white text-base ml-3"
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
+
           {/* Password */}
           <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
             <Lock size={20} color="#666666" strokeWidth={2} />
@@ -77,23 +108,36 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
+          {/* Confirm Password */}
+          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+            <Lock size={20} color="#666666" strokeWidth={2} />
+            <TextInput
+              placeholder="Confirmar Senha"
+              placeholderTextColor="#666"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={(text) => { setConfirmPassword(text); setErrorMessage(""); }}
+              className="flex-1 text-white text-base ml-3"
+            />
+            <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} className="p-1">
+              {showConfirmPassword ? (
+                <Eye size={20} color="#666666" strokeWidth={2} />
+              ) : (
+                <EyeOff size={20} color="#666666" strokeWidth={2} />
+              )}
+            </Pressable>
+          </View>
+
           {errorMessage ? (
             <Text className="text-red-500 text-sm text-center mb-4">{errorMessage}</Text>
           ) : null}
 
-          {/* Forgot Password */}
-          <Link href="/forgot-password" asChild>
-            <Pressable className="self-end mb-6">
-              <Text className="text-neutral-400 text-sm">Esqueceu a senha?</Text>
-            </Pressable>
-          </Link>
-
-          {/* Login Button */}
+          {/* Register Button */}
           <Pressable 
-            onPress={handleLogin}
-            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40"
+            onPress={handleRegister}
+            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40 mt-6"
           >
-            <Text className="text-lg font-bold text-white tracking-wide">Entrar</Text>
+            <Text className="text-lg font-bold text-white tracking-wide">Cadastrar</Text>
           </Pressable>
 
           {/* Divider */}
@@ -103,12 +147,12 @@ export default function LoginScreen() {
             <View className="flex-1 h-px bg-neutral-900" />
           </View>
 
-          {/* Sign Up */}
+          {/* Sign In */}
           <View className="flex-row justify-center items-center">
-            <Text className="text-neutral-400 text-sm">Não tem uma conta? </Text>
-            <Link href="/register" asChild>
+            <Text className="text-neutral-400 text-sm">Já tem uma conta? </Text>
+            <Link href="/login" asChild>
               <Pressable>
-                <Text className="text-red-600 text-sm font-semibold">Cadastre-se</Text>
+                <Text className="text-red-600 text-sm font-semibold">Entre</Text>
               </Pressable>
             </Link>
           </View>

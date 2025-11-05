@@ -1,28 +1,37 @@
 import { View, Text, TextInput, Pressable } from "react-native";
 import { useState } from "react";
-import { useAuth } from "./auth-context";
 import { Link } from "expo-router";
-import { User, Lock, Eye, EyeOff } from "lucide-react-native";
+import { Lock, Eye, EyeOff } from "lucide-react-native";
 
-export default function LoginScreen() {
-  const { login } = useAuth();
-  const [username, setUsername] = useState("");
+export default function ResetPasswordScreen() {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleLogin = () => {
+  const handleResetPassword = () => {
     setErrorMessage(""); // Clear previous errors
-    if (!username || !password) {
+
+    if (!password || !confirmPassword) {
       setErrorMessage("Por favor, preencha todos os campos.");
       return;
     }
-    if (username === "kumi" && password === "yakuza") {
-      login();
-    } else {
-      setErrorMessage("Usuário ou senha inválidos.");
+
+    if (password.length < 6) {
+      setErrorMessage("A nova senha deve ter pelo menos 6 caracteres.");
+      return;
     }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("As senhas não coincidem.");
+      return;
+    }
+
+    // If validation passes, proceed with reset password logic
+    console.log("Resetting password...");
+    // Here you would typically call an API to reset the password
   };
 
   return (
@@ -42,26 +51,15 @@ export default function LoginScreen() {
           <View className="w-16 h-0.5 bg-red-600 mt-2" />
         </View>
 
-        {/* Form */}
         <View className="w-full max-w-md">
-          {/* Username */}
-          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
-            <User size={20} color="#666666" strokeWidth={2} />
-            <TextInput
-              placeholder="Nome de usuário"
-              placeholderTextColor="#666"
-              value={username}
-              onChangeText={(text) => { setUsername(text); setErrorMessage(""); }}
-              className="flex-1 text-white text-base ml-3"
-              autoCapitalize="none"
-            />
-          </View>
+          <Text className="text-white text-2xl font-bold text-center mb-2">Redefinir senha</Text>
+          <Text className="text-neutral-400 text-center mb-8">Crie uma nova senha para sua conta.</Text>
 
           {/* Password */}
           <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
             <Lock size={20} color="#666666" strokeWidth={2} />
             <TextInput
-              placeholder="Senha"
+              placeholder="Nova Senha"
               placeholderTextColor="#666"
               secureTextEntry={!showPassword}
               value={password}
@@ -77,38 +75,48 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
+          {/* Confirm Password */}
+          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+            <Lock size={20} color="#666666" strokeWidth={2} />
+            <TextInput
+              placeholder="Confirmar Nova Senha"
+              placeholderTextColor="#666"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={(text) => { setConfirmPassword(text); setErrorMessage(""); }}
+              className="flex-1 text-white text-base ml-3"
+            />
+            <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} className="p-1">
+              {showConfirmPassword ? (
+                <Eye size={20} color="#666666" strokeWidth={2} />
+              ) : (
+                <EyeOff size={20} color="#666666" strokeWidth={2} />
+              )}
+            </Pressable>
+          </View>
+
           {errorMessage ? (
             <Text className="text-red-500 text-sm text-center mb-4">{errorMessage}</Text>
           ) : null}
 
-          {/* Forgot Password */}
-          <Link href="/forgot-password" asChild>
-            <Pressable className="self-end mb-6">
-              <Text className="text-neutral-400 text-sm">Esqueceu a senha?</Text>
-            </Pressable>
-          </Link>
-
-          {/* Login Button */}
+          {/* Reset Password Button */}
           <Pressable 
-            onPress={handleLogin}
-            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40"
+            onPress={handleResetPassword}
+            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40 mt-6"
           >
-            <Text className="text-lg font-bold text-white tracking-wide">Entrar</Text>
+            <Text className="text-lg font-bold text-white tracking-wide">Redefinir senha</Text>
           </Pressable>
 
           {/* Divider */}
           <View className="flex-row items-center my-8">
             <View className="flex-1 h-px bg-neutral-900" />
-            <Text className="text-neutral-600 px-4 text-xs font-semibold">OU</Text>
-            <View className="flex-1 h-px bg-neutral-900" />
           </View>
 
-          {/* Sign Up */}
+          {/* Back to Login */}
           <View className="flex-row justify-center items-center">
-            <Text className="text-neutral-400 text-sm">Não tem uma conta? </Text>
-            <Link href="/register" asChild>
+            <Link href="/login" asChild>
               <Pressable>
-                <Text className="text-red-600 text-sm font-semibold">Cadastre-se</Text>
+                <Text className="text-red-600 text-sm font-semibold">Voltar para o Login</Text>
               </Pressable>
             </Link>
           </View>
