@@ -1,481 +1,375 @@
-import { achievements, attributes, history } from "@/constants";
-import { useState } from "react";
-import { Pressable, ScrollView, Text, View, ActivityIndicator } from "react-native";
-import { CustomModal } from "../../../components/ui/custom-modal";
-import { skills } from "../../../constants/skills-data";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Pressable, ScrollView, Text, View, ActivityIndicator, TextInput, Alert, Image, Linking } from "react-native";
+import { AppBottomSheet } from "../../../components/ui/bottom-sheet";
 import { useAuth } from "../../context/auth-context";
 import { useUserProfile } from "../../hooks/useUserProfile";
+import { supabase } from "../../lib/supabase";
+import * as ImagePicker from 'expo-image-picker';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
-  const { logout } = useAuth();
-  const { profile, loading, error } = useUserProfile();
-  const [selectedTab, setSelectedTab] = useState("stats");
-  const [isModalVisible, setModalVisible] = useState(false);
+  const { logout, user } = useAuth();
+  const { profile, loading, error, refetch } = useUserProfile();
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case "legendary": return { bg: "bg-yellow-950/20 border-yellow-900/50", text: "text-yellow-500", badge: "bg-yellow-950/30" };
-      case "epic": return { bg: "bg-purple-950/20 border-purple-900/50", text: "text-purple-500", badge: "bg-purple-950/30" };
-      case "rare": return { bg: "bg-blue-950/20 border-blue-900/50", text: "text-blue-500", badge: "bg-blue-950/30" };
-      default: return { bg: "bg-neutral-950/20 border-neutral-800", text: "text-neutral-500", badge: "bg-neutral-900" };
+  const bottomSheetModalRef = useRef<any>(null);
+  const handlePresentModal = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+
+  // State for form fields
+  const [editUsername, setEditUsername] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [editWebsite, setEditWebsite] = useState("");
+  const [editGithub, setEditGithub] = useState("");
+  const [editTwitter, setEditTwitter] = useState("");
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
+  const [editBannerUrl, setEditBannerUrl] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setEditUsername(profile.username || "");
+      setEditBio(profile.bio || "");
+      setEditSlug(profile.slug || "");
+      setEditWebsite(profile.website || "");
+      setEditGithub(profile.github || "");
+      setEditTwitter(profile.twitter || "");
+      setEditAvatarUrl(profile.avatar_url || null);
+      setEditBannerUrl(profile.banner_url || null);
+    }
+  }, [profile]);
+
+  const handlePickImage = async (type: 'avatar' | 'banner') => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'É necessário permitir o acesso à galeria para escolher uma imagem.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: type === 'avatar' ? [1, 1] : [16, 9],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      if (type === 'avatar') {
+        setEditAvatarUrl(uri);
+      } else {
+        setEditBannerUrl(uri);
+      }
     }
   };
 
+  const uploadImage = async (uri: string, bucket: 'avatars' | 'banners'): Promise<string | null> => {
+    if (!user || !uri.startsWith('file://')) {
+      return null;
+    }
+
+    const fileExt = uri.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+    const fileType = `image/${fileExt}`;
+
+    const formData = new FormData();
+    formData.append('file', {
+      uri,
+      name: fileName,
+      type: fileType,
+    } as any);
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, formData, {
+        upsert: true,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
+    return publicUrl;
+  };
+
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-');
+  };
+
+  const handleSlugChange = (text: string) => {
+    setEditSlug(slugify(text));
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      if (newPassword) {
+        const { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
+        if (passwordError) throw passwordError;
+      }
+      if (newEmail && newEmail !== user.email) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: newEmail });
+        if (emailError) throw emailError;
+      }
+
+      let finalAvatarUrl = profile?.avatar_url;
+      if (editAvatarUrl && editAvatarUrl !== profile?.avatar_url) {
+        finalAvatarUrl = await uploadImage(editAvatarUrl, 'avatars') || finalAvatarUrl;
+      }
+
+      let finalBannerUrl = profile?.banner_url;
+      if (editBannerUrl && editBannerUrl !== profile?.banner_url) {
+        finalBannerUrl = await uploadImage(editBannerUrl, 'banners') || finalBannerUrl;
+      }
+
+      const updates = {
+        id: user.id,
+        username: editUsername,
+        bio: editBio,
+        slug: editSlug,
+        website: editWebsite,
+        github: editGithub,
+        twitter: editTwitter,
+        avatar_url: finalAvatarUrl,
+        banner_url: finalBannerUrl,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: profileError } = await supabase.from('profiles').upsert(updates, { onConflict: 'id' });
+      if (profileError) throw profileError;
+
+      Alert.alert("Sucesso", "Perfil atualizado!");
+      bottomSheetModalRef.current?.dismiss();
+      refetch();
+    } catch (e: any) {
+      Alert.alert("Erro ao salvar", e.message);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+  };
+
   if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-black">
-        <ActivityIndicator size="large" color="#DC2626" />
-        <Text className="text-neutral-400 mt-4">Carregando perfil...</Text>
+    return <View className="flex-1 justify-center items-center bg-black"><ActivityIndicator size="large" color="#DC2626" /></View>;
+  }
+
+  if (error) {
+    return <View className="flex-1 justify-center items-center bg-black"><Text className="text-red-500">Erro ao carregar o perfil.</Text></View>;
+  }
+  
+  if (!profile) {
+     return (
+      <View className="flex-1 justify-center items-center bg-black px-6">
+        <Text className="text-white text-xl font-bold text-center mb-4">Crie seu Perfil</Text>
+        <Text className="text-neutral-400 text-center mb-6">Complete seu perfil para começar sua jornada.</Text>
+        <Pressable onPress={handlePresentModal} className="p-3 bg-red-600 rounded-lg">
+          <Text className="text-white font-bold">Criar Perfil</Text>
+        </Pressable>
       </View>
     );
   }
 
-  if (error || !profile) {
-    return (
-      <View className="flex-1 justify-center items-center bg-black">
-        <Text className="text-red-500">Erro ao carregar o perfil.</Text>
-        <Text className="text-neutral-400 text-center mt-2 px-4">{error?.message || "Não foi possível encontrar os dados do perfil."}</Text>
-      </View>
-    );
-  }
+  const SocialLinks = () => (
+    <View className="flex-row justify-center items-center gap-4 my-4">
+      {profile.website && (
+        <Pressable onPress={() => Linking.openURL(profile.website!)}>
+          <FontAwesome name="globe" size={24} color="#9ca3af" />
+        </Pressable>
+      )}
+      {profile.github && (
+        <Pressable onPress={() => Linking.openURL(profile.github!)}>
+          <FontAwesome name="github" size={24} color="#9ca3af" />
+        </Pressable>
+      )}
+      {profile.twitter && (
+        <Pressable onPress={() => Linking.openURL(profile.twitter!)}>
+          <FontAwesome name="twitter" size={24} color="#9ca3af" />
+        </Pressable>
+      )}
+    </View>
+  );
 
   return (
-    <ScrollView className="flex-1 bg-black">
-      {/* HEADER */}
-      <View className="relative h-96 overflow-hidden bg-gradient-to-b from-red-950 via-red-900 to-black">
-        <View className="absolute inset-0 opacity-5">
-          <Text className="text-white text-9xl text-center mt-20">罪</Text>
-        </View>
+    <>
+      <ScrollView className="flex-1 bg-black">
+        {/* HEADER */}
+        <View className="relative h-96">
+          {profile.banner_url ? (
+            <Image source={{ uri: profile.banner_url }} className="absolute inset-0 w-full h-full" />
+          ) : (
+            <View className="absolute inset-0 bg-gradient-to-b from-red-950 via-red-900 to-black" />
+          )}
+          <View className="absolute inset-0 bg-black/50" />
+          
+          <View className="flex-1 justify-center items-center px-6 pt-16">
+            <View className="w-24 h-24 rounded-full items-center justify-center mb-4 border-4 border-red-600">
+              {profile.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} className="w-full h-full rounded-full" />
+              ) : (
+                <Text className="text-5xl">🐲</Text>
+              )}
+            </View>
 
-        <View className="flex-1 justify-center items-center px-6 pt-16">
-          {/* Avatar */}
-          <View className="w-24 h-24 bg-red-950 border-4 border-red-600 rounded-full items-center justify-center mb-4">
-            <Text className="text-5xl">🐲</Text>
-          </View>
-
-          {/* Nome */}
-          <Text className="text-2xl font-black text-white tracking-wider text-center mb-1">
-            {profile.username_jp || 'N/A'}
-          </Text>
-          <Text className="text-base font-semibold text-neutral-400 mb-2">
-            {profile.username}
-          </Text>
-
-          {/* Rank Badge */}
-          <View className="bg-red-600 px-4 py-1.5 rounded-full">
-            <Text className="text-white text-xs font-bold tracking-wider">
-              {profile.rank_jp || '...'} • {profile.rank || '...'}
-            </Text>
-          </View>
-        </View>
-
-        <View className="absolute left-0 top-40 w-1 h-20 bg-red-600" />
-        <View className="absolute right-0 top-40 w-1 h-20 bg-red-600" />
-      </View>
-
-      {/* CONTEÚDO */}
-      <View className="px-6 pt-6">
-
-        {/* Cards de Info Rápida */}
-        <View className="flex-row gap-3 mb-6">
-          <View className="flex-1 bg-zinc-950 border border-neutral-800 rounded-lg p-4">
-            <Text className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
-              Nível
-            </Text>
-            <Text className="text-white text-2xl font-bold">{profile.level}</Text>
-          </View>
-
-          <View className="flex-1 bg-zinc-950 border border-neutral-800 rounded-lg p-4">
-            <Text className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
-              Dinheiro
-            </Text>
-            <Text className="text-green-500 text-lg font-bold">¥{profile.money.toLocaleString()}</Text>
-          </View>
-
-          <View className="flex-1 bg-zinc-950 border border-neutral-800 rounded-lg p-4">
-            <Text className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
-              Reputação
-            </Text>
-            <Text className="text-yellow-500 text-lg font-bold">{profile.reputation.toLocaleString()}</Text>
+            <Text className="text-2xl font-black text-white tracking-wider text-center mb-1">{profile.slug || 'N/A'}</Text>
+            <Text className="text-base font-semibold text-neutral-400 mb-2">{profile.username}</Text>
+            <View className="bg-red-600 px-4 py-1.5 rounded-full">
+              <Text className="text-white text-xs font-bold tracking-wider">{profile.rank_jp || '...'} • {profile.rank || '...'}</Text>
+            </View>
+            <SocialLinks />
           </View>
         </View>
 
-        {/* Progresso de Experiência */}
-        <View className="bg-zinc-950 border border-neutral-800 rounded-lg p-4 mb-6">
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-neutral-500 text-xs uppercase tracking-wider">
-              Experiência
-            </Text>
-            <Text className="text-white text-xs font-semibold">
-              {profile.experience.toLocaleString()} / {profile.next_level_xp.toLocaleString()} XP
-            </Text>
+        {/* INFORMATION SECTION */}
+        <View className="px-6 pt-6 pb-4">
+          {/* Bio Card */}
+          {profile.bio && (
+            <View className="bg-black rounded-xl p-4 mb-4">
+              <View className="flex-row items-center mb-2">
+                <View className="w-1 h-4 bg-red-600 rounded-full mr-2" />
+                <Text className="text-red-500 font-bold text-sm tracking-wider">BIO</Text>
+              </View>
+              <Text className="text-neutral-300 leading-5">{profile.bio}</Text>
+            </View>
+          )}
+
+          {/* Stats Grid */}
+          <View className="flex-row gap-3 mb-4">
+            {/* Level Card */}
+            <View className="flex-1 bg-gradient-to-br from-red-950/50 to-neutral-900 border border-red-900/50 rounded-xl p-4">
+              <Text className="text-neutral-500 text-xs font-semibold mb-1">LEVEL</Text>
+              <View className="flex-row items-baseline">
+                <Text className="text-red-500 text-3xl font-black">{profile.level || 1}</Text>
+                <Text className="text-red-700 text-lg font-bold ml-1">級</Text>
+              </View>
+            </View>
+
+            {/* Clan Card */}
+            <View className="flex-1 bg-black rounded-xl p-4">
+              <Text className="text-neutral-500 text-xs font-semibold mb-1">CLAN</Text>
+              <Text className="text-white text-lg font-bold" numberOfLines={1}>
+                {profile.clans?.name || 'Sem Clan'}
+              </Text>
+              <Text className="text-neutral-600 text-xs">氏族</Text>
+            </View>
           </View>
-          <View className="bg-neutral-900 h-3 rounded-full overflow-hidden">
-            <View
-              className="bg-gradient-to-r from-red-600 to-red-500 h-full"
-              style={{ width: `${(profile.experience / profile.next_level_xp) * 100}%` }}
-            />
+
+          {/* Username JP Card */}
+          {profile.username_jp && (
+            <View className="bg-black rounded-xl p-4 mb-4">
+              <View className="flex-row items-center mb-2">
+                <View className="w-1 h-4 bg-red-600 rounded-full mr-2" />
+                <Text className="text-red-500 font-bold text-sm tracking-wider">名前</Text>
+              </View>
+              <Text className="text-white text-2xl font-bold tracking-wide">{profile.username_jp}</Text>
+            </View>
+          )}
+
+          {/* Member Since Card */}
+          <View className="bg-black rounded-xl p-4 mb-4">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-neutral-500 text-xs font-semibold mb-1">MEMBRO DESDE</Text>
+                <Text className="text-white text-lg font-bold">{formatDate(profile.joined_date)}</Text>
+              </View>
+              <View className="bg-black px-3 py-2 rounded-lg">
+                <Text className="text-red-500 text-2xl">龍</Text>
+              </View>
+            </View>
           </View>
-          <Text className="text-neutral-600 text-xs mt-2">
-            {Math.round((profile.experience / profile.next_level_xp) * 100)}% para o próximo nível
-          </Text>
+
+          {/* Decorative Divider */}
+          <View className="flex-row items-center justify-center my-6">
+            <View className="flex-1 h-px bg-neutral-800" />
+            <Text className="text-neutral-700 text-xl mx-4">龍</Text>
+            <View className="flex-1 h-px bg-neutral-800" />
+          </View>
         </View>
 
-        {/* Info do Clã */}
-        <View className="bg-red-950/20 border-l-4 border-red-600 p-4 rounded-r-lg mb-6">
-          <Text className="text-neutral-500 text-xs uppercase tracking-wider mb-2">
-            Família
-          </Text>
-          <Text className="text-white text-lg font-bold mb-1">
-            {profile.clan}
-          </Text>
-          <Text className="text-neutral-400 text-sm mb-2">
-            {profile.clan_name}
-          </Text>
-          <Text className="text-neutral-600 text-xs">
-            Membro desde {new Date(profile.joined_date).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-          </Text>
+        {/* ACTION BUTTONS */}
+        <View className="px-6 pb-6">
+          <Pressable onPress={handlePresentModal} className="active:opacity-70 mb-3">
+            <View className="bg-black border border-zinc-900 rounded-xl py-3 items-center">
+              <Text className="text-white font-bold text-base"> Editar Perfil</Text>
+            </View>
+          </Pressable>
+          
+          <Pressable onPress={logout} className="active:opacity-70">
+            <View className="bg-red-900/20 border border-red-800 rounded-xl py-3 items-center">
+              <Text className="text-red-400 font-bold text-base"> Sair da Conta</Text>
+            </View>
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      <AppBottomSheet ref={bottomSheetModalRef} title="Edição de Perfil" titleJP="プロファイル編集">
+        <Text className="text-white font-bold text-lg mb-4">Imagens</Text>
+        <View className="flex-row justify-around mb-6">
+          <Pressable onPress={() => handlePickImage('avatar')} className="items-center">
+            <Image source={{ uri: editAvatarUrl || undefined }} className="w-24 h-24 rounded-full bg-neutral-800 border-2 border-neutral-700 mb-2" />
+            <Text className="text-red-400">Alterar Avatar</Text>
+          </Pressable>
+          <Pressable onPress={() => handlePickImage('banner')} className="items-center">
+            <Image source={{ uri: editBannerUrl || undefined }} className="w-40 h-24 rounded-lg bg-neutral-800 border-2 border-neutral-700 mb-2" />
+            <Text className="text-red-400">Alterar Banner</Text>
+          </Pressable>
         </View>
 
-        {/* Tabs de Navegação */}
+        <Text className="text-white font-bold text-lg mb-4">Informações Públicas</Text>
+        <View className="mb-4">
+          <Text className="text-neutral-400 mb-2">Nome de Usuário</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800" value={editUsername} onChangeText={setEditUsername} />
+        </View>
+        <View className="mb-4">
+          <Text className="text-neutral-400 mb-2">Bio</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800 h-24" value={editBio} onChangeText={setEditBio} multiline textAlignVertical="top" />
+        </View>
         <View className="mb-6">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="flex-row gap-3">
-              <Pressable
-                onPress={() => setSelectedTab("stats")}
-                className="active:opacity-70"
-              >
-                <View className={`px-5 py-3 rounded-lg border ${selectedTab === "stats"
-                  ? 'bg-red-600 border-red-500'
-                  : 'bg-zinc-950 border-neutral-800'
-                  }`}>
-                  <Text className={`text-sm font-semibold ${selectedTab === "stats" ? 'text-white' : 'text-neutral-400'
-                    }`}>
-                    📊 Atributos
-                  </Text>
-                </View>
-              </Pressable>
-
-              <Pressable
-                onPress={() => setSelectedTab("achievements")}
-                className="active:opacity-70"
-              >
-                <View className={`px-5 py-3 rounded-lg border ${selectedTab === "achievements"
-                  ? 'bg-red-600 border-red-500'
-                  : 'bg-zinc-950 border-neutral-800'
-                  }`}>
-                  <Text className={`text-sm font-semibold ${selectedTab === "achievements" ? 'text-white' : 'text-neutral-400'
-                    }`}>
-                    🏆 Conquistas
-                  </Text>
-                </View>
-              </Pressable>
-
-              <Pressable
-                onPress={() => setSelectedTab("history")}
-                className="active:opacity-70"
-              >
-                <View className={`px-5 py-3 rounded-lg border ${selectedTab === "history"
-                  ? 'bg-red-600 border-red-500'
-                  : 'bg-zinc-950 border-neutral-800'
-                  }`}>
-                  <Text className={`text-sm font-semibold ${selectedTab === "history" ? 'text-white' : 'text-neutral-400'
-                    }`}>
-                    📜 Histórico
-                  </Text>
-                </View>
-              </Pressable>
-
-              <Pressable
-                onPress={() => setSelectedTab("skills")}
-                className="active:opacity-70"
-              >
-                <View className={`px-5 py-3 rounded-lg border ${selectedTab === "skills"
-                  ? 'bg-red-600 border-red-500'
-                  : 'bg-zinc-950 border-neutral-800'
-                  }`}>
-                  <Text className={`text-sm font-semibold ${selectedTab === "skills" ? 'text-white' : 'text-neutral-400'
-                    }`}>
-                    🛠️ Habilidades
-                  </Text>
-                </View>
-              </Pressable>
-            </View>
-          </ScrollView>
+          <Text className="text-neutral-400 mb-2">Slug</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800" value={editSlug} onChangeText={handleSlugChange} autoCapitalize="none" />
+          <Text className="text-neutral-500 text-xs mt-2">Será formatado como URL. Apenas letras minúsculas, números e hífens.</Text>
+        </View>
+        
+        <Text className="text-white font-bold text-lg mb-4">Links Sociais</Text>
+        <View className="mb-4">
+          <Text className="text-neutral-400 mb-2">Website</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800" value={editWebsite} onChangeText={setEditWebsite} placeholder="https://seu-site.com" placeholderTextColor="#666" autoCapitalize="none" keyboardType="url" />
+        </View>
+        <View className="mb-4">
+          <Text className="text-neutral-400 mb-2">GitHub</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800" value={editGithub} onChangeText={setEditGithub} placeholder="https://github.com/usuario" placeholderTextColor="#666" autoCapitalize="none" keyboardType="url" />
+        </View>
+        <View className="mb-6">
+          <Text className="text-neutral-400 mb-2">Twitter / X</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800" value={editTwitter} onChangeText={setEditTwitter} placeholder="https://x.com/usuario" placeholderTextColor="#666" autoCapitalize="none" keyboardType="url" />
         </View>
 
-        {/* ATRIBUTOS TAB */}
-        {selectedTab === "stats" && (
-          <View className="mb-8">
-            <View className="flex-row items-center mb-4">
-              <Text className="text-red-500 text-base font-bold">能力値</Text>
-              <View className="flex-1 h-px bg-neutral-800 ml-3" />
-            </View>
-
-            {/* Lealdade Especial */}
-            <View className="bg-zinc-950 border border-red-800 rounded-lg p-4 mb-4">
-              <View className="flex-row justify-between items-center mb-2">
-                <View>
-                  <Text className="text-red-500 text-lg font-bold">忠誠 Lealdade</Text>
-                  <Text className="text-neutral-500 text-xs mt-1">
-                    Sua dedicação à família
-                  </Text>
-                </View>
-                <Text className="text-white text-2xl font-bold">{profile.loyalty}%</Text>
-              </View>
-              <View className="bg-neutral-900 h-3 rounded-full overflow-hidden">
-                <View className="bg-red-600 h-full" style={{ width: `${profile.loyalty}%` }} />
-              </View>
-            </View>
-
-            {/* Atributos de Combate */}
-            <View className="gap-3">
-              {attributes.map((attr, index) => (
-                <View
-                  key={index}
-                  className="bg-zinc-950 border border-neutral-800 rounded-lg p-4"
-                >
-                  <View className="flex-row justify-between items-center mb-2">
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-neutral-400 text-base font-semibold">
-                        {attr.nameJP}
-                      </Text>
-                      <Text className="text-white text-sm">
-                        {attr.name}
-                      </Text>
-                    </View>
-                    <Text className="text-white text-lg font-bold">{attr.value}</Text>
-                  </View>
-                  <View className="bg-neutral-900 h-2 rounded-full overflow-hidden">
-                    <View className={`${attr.color} h-full`} style={{ width: `${attr.value}%` }} />
-                  </View>
-                </View>
-              ))}
-            </View>
-
-            <Pressable className="active:opacity-70 mt-4">
-              <View className="bg-red-600 rounded-lg py-3 items-center">
-                <Text className="text-white font-bold text-sm">
-                  MELHORAR ATRIBUTOS (2 Pontos Disponíveis)
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-        )}
-
-        {/* CONQUISTAS TAB */}
-        {selectedTab === "achievements" && (
-          <View className="mb-8">
-            <View className="flex-row items-center mb-4">
-              <Text className="text-red-500 text-base font-bold">実績</Text>
-              <View className="flex-1 h-px bg-neutral-800 ml-3" />
-            </View>
-
-            <View className="bg-zinc-950 border border-neutral-800 rounded-lg p-4 mb-5">
-              <View className="flex-row justify-between">
-                <View>
-                  <Text className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
-                    Desbloqueadas
-                  </Text>
-                  <Text className="text-white text-2xl font-bold">
-                    {achievements.filter(a => a.unlocked).length}/{achievements.length}
-                  </Text>
-                </View>
-                <View className="items-end">
-                  <Text className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
-                    Progresso Total
-                  </Text>
-                  <Text className="text-yellow-500 text-xl font-bold">
-                    {Math.round((achievements.filter(a => a.unlocked).length / achievements.length) * 100)}%
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {achievements.map((achievement) => {
-              const rarityStyle = getRarityColor(achievement.rarity);
-              return (
-                <View
-                  key={achievement.id}
-                  className={`mb-3 rounded-lg border p-4 ${achievement.unlocked ? rarityStyle.bg : 'bg-neutral-950/50 border-neutral-900'
-                    } ${!achievement.unlocked && 'opacity-60'}`}
-                >
-                  <View className="flex-row items-start gap-3">
-                    <Text className="text-4xl">{achievement.icon}</Text>
-                    <View className="flex-1">
-                      <View className="flex-row items-center gap-2 mb-1">
-                        <Text className={`text-base font-bold ${achievement.unlocked ? 'text-white' : 'text-neutral-600'
-                          }`}>
-                          {achievement.title}
-                        </Text>
-                        {achievement.unlocked && (
-                          <View className={`${rarityStyle.badge} px-2 py-0.5 rounded`}>
-                            <Text className={`text-xs font-semibold ${rarityStyle.text}`}>
-                              {achievement.rarity === "legendary" ? "LENDÁRIA" :
-                                achievement.rarity === "epic" ? "ÉPICA" :
-                                  achievement.rarity === "rare" ? "RARA" : "COMUM"}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text className={`text-xs mb-2 ${achievement.unlocked ? 'text-neutral-400' : 'text-neutral-600'
-                        }`}>
-                        {achievement.description}
-                      </Text>
-                      {achievement.unlocked ? (
-                        <Text className="text-neutral-600 text-xs">
-                          ✓ Desbloqueado em {achievement.date}
-                        </Text>
-                      ) : achievement.progress !== undefined && (
-                        <View>
-                          <View className="bg-neutral-900 h-1.5 rounded-full overflow-hidden mb-1">
-                            <View
-                              className="bg-neutral-700 h-full"
-                              style={{ width: `${achievement.progress}%` }}
-                            />
-                          </View>
-                          <Text className="text-neutral-600 text-xs">
-                            Progresso: {achievement.progress}%
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* HISTÓRICO TAB */}
-        {selectedTab === "history" && (
-          <View className="mb-8">
-            <View className="flex-row items-center mb-4">
-              <Text className="text-red-500 text-base font-bold">履歴</Text>
-              <View className="flex-1 h-px bg-neutral-800 ml-3" />
-            </View>
-
-            <Text className="text-neutral-500 text-xs mb-4">
-              Suas atividades e conquistas recentes na organização
-            </Text>
-
-            {history.map((item) => (
-              <View
-                key={item.id}
-                className="bg-zinc-950 border border-neutral-800 rounded-lg p-4 mb-3"
-              >
-                <View className="flex-row items-start gap-3">
-                  <View className="w-10 h-10 bg-red-950/30 border border-red-900/50 rounded-lg items-center justify-center">
-                    <Text className="text-xl">{item.icon}</Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-white text-sm font-semibold mb-1">
-                      {item.title}
-                    </Text>
-                    <Text className={`text-xs font-semibold mb-2 ${item.reward.includes('-') ? 'text-red-400' : 'text-green-400'
-                      }`}>
-                      {item.reward}
-                    </Text>
-                    <Text className="text-neutral-600 text-xs">
-                      🕐 {item.time}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-
-            <Pressable className="active:opacity-70 mt-2">
-              <View className="bg-zinc-950 border border-neutral-800 rounded-lg py-3 items-center">
-                <Text className="text-neutral-400 font-semibold text-sm">
-                  Ver Histórico Completo →
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-        )}
-
-        {/* SKILLS TAB */}
-        {selectedTab === "skills" && (
-          <View className="mb-8">
-            <View className="flex-row items-center mb-4">
-              <Text className="text-red-500 text-base font-bold">技能</Text>
-              <View className="flex-1 h-px bg-neutral-800 ml-3" />
-            </View>
-
-            {skills.map((skill) => (
-              <View
-                key={skill.id}
-                className="bg-zinc-950 border border-neutral-800 rounded-lg p-4 mb-3"
-              >
-                <View className="flex-row items-start gap-3">
-                  <View className="w-10 h-10 bg-red-950/30 border border-red-900/50 rounded-lg items-center justify-center">
-                    <Text className="text-xl">{skill.icon}</Text>
-                  </View>
-                  <View className="flex-1">
-                    <View className="flex-row justify-between items-center mb-1">
-                      <Text className="text-white text-sm font-semibold">
-                        {skill.nameJP} {skill.name}
-                      </Text>
-                      <Text className="text-white text-sm font-bold">Lvl {skill.level}</Text>
-                    </View>
-                    <Text className="text-neutral-400 text-xs mb-2">
-                      {skill.description}
-                    </Text>
-                    <View className="bg-neutral-900 h-2 rounded-full overflow-hidden">
-                      <View
-                        className={`${skill.color} h-full`}
-                        style={{ width: `${skill.progress}%` }}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-
-        {/* Modal Button */}
-        <View className="mb-6 gap-0 flex flex-col items-center  w-full max-w-full ">
-          <Pressable onPress={() => setModalVisible(true)} className="active:opacity-70 mt-4 w-full">
-            <View className="bg-zinc-950 border border-neutral-800 rounded-lg py-3 items-center">
-              <Text className="text-zinc-50 font-bold text-sm">Edição de Perfil</Text>
-            </View>
-          </Pressable>
-
-          {/* Logout Button */}
-          <Pressable onPress={logout} className="active:opacity-70 mt-4 mb-4 w-full">
-            <View className="bg-red-900/50 border border-red-800 rounded-lg py-3 items-center">
-              <Text className="text-red-400 font-bold text-sm">Sair da Conta</Text>
-            </View>
-          </Pressable>
-
+        <Text className="text-white font-bold text-lg mb-4">Informações Privadas</Text>
+        <View className="mb-4">
+          <Text className="text-neutral-400 mb-2">Novo E-mail</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800" value={newEmail} onChangeText={setNewEmail} placeholder={user?.email} placeholderTextColor="#666" keyboardType="email-address" autoCapitalize="none" />
+        </View>
+        <View className="mb-6">
+          <Text className="text-neutral-400 mb-2">Nova Senha</Text>
+          <TextInput className="bg-neutral-900 text-white p-3 rounded-lg border border-neutral-800" value={newPassword} onChangeText={setNewPassword} placeholder="Deixe em branco para não alterar" placeholderTextColor="#666" secureTextEntry />
         </View>
 
-        {/* Footer */}
-        <View className="items-center py-8 mb-6">
-          <View className="flex-row items-center gap-3 mb-3">
-            <View className="w-12 h-px bg-neutral-800" />
-            <Text className="text-neutral-700 text-xl">龍</Text>
-            <View className="w-12 h-px bg-neutral-800" />
-          </View>
-          <Text className="text-neutral-700 text-xs tracking-[0.25em]">
-            HONOR & LOYALTY
-          </Text>
-        </View>
-      </View>
-
-      <CustomModal
-        visible={isModalVisible}
-        onClose={() => setModalVisible(false)}
-        title="Edição de Perfil"
-        titleJP="警告" // Opcional
-      >
-        <Text className="text-neutral-300 text-sm leading-6 text-center">
-          Esta é uma modal personalizada para edição de perfil. Aqui você pode adicionar formulários ou outras funcionalidades conforme necessário.
-        </Text>
-      </CustomModal>
-
-    </ScrollView>
+        <Pressable onPress={handleSave} className="p-4 bg-red-600 rounded-lg items-center mb-4">
+          <Text className="text-white font-bold text-lg">Salvar Alterações</Text>
+        </Pressable>
+      </AppBottomSheet>
+    </>
   );
 }
