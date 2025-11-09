@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import * as Notifications from 'expo-notifications';
@@ -21,21 +20,6 @@ export const useAuth = () => {
   }
   return context;
 };
-
-function useProtectedRoute(user: User | null) {
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'register' || segments[0] === 'forgot-password' || segments[0] === 'reset-password';
-
-    if (!user && !inAuthGroup) {
-      router.replace('/login');
-    } else if (user && inAuthGroup) {
-      router.replace('/(app)');
-    }
-  }, [user, segments, router]);
-}
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -66,25 +50,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, []);
 
-  useProtectedRoute(user);
-
   const value = {
     signIn: async (email: string, password: string) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      // Schedule notification on successful login
+         // Schedule notification on successful login
       await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Login Bem-sucedido! 🚀",
-          body: 'Bem-vindo de volta!',
-        },
-        trigger: { 
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 1,
-          repeats: false
-        },
-      });
+          content: {
+            title: "Login Bem-sucedido! 🚀",
+            body: 'Bem-vindo de volta!',
+          },
+          trigger: { 
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: 1,
+            repeats: false
+          },
+        });
+
     },
     signOut: async () => {
       await supabase.auth.signOut();

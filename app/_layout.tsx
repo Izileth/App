@@ -1,52 +1,54 @@
 
-import { Slot, useRouter, useSegments } from "expo-router";
-
+import { Slot, useSegments, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-
 import { StatusBar } from "expo-status-bar";
-
 import { AuthProvider, useAuth } from "./context/auth-context";
-
 import LoadingScreen from "./_loading";
-
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-
 import { View } from 'react-native';
-
 import '@/global.css';
 
-
-const InitialLayout = () => {
+const RootLayoutNav = () => {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-
   const [isSplashAnimationFinished, setSplashAnimationFinished] = useState(false);
   const [isAppReady, setAppReady] = useState(false);
 
   const opacity = useSharedValue(1);
 
+  // This useEffect hook contains the route protection logic.
+  // It runs inside the component that renders the <Slot />,
+  // which is the correct place for it.
   useEffect(() => {
+    // Wait until auth is loaded and splash animation is done
     if (loading || !isSplashAnimationFinished) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (user && !inAuthGroup) {
+  
+    // Use a safe string check in case the segments type doesn't include the literal "(auth)"
+    const inAuthGroup = segments[0]?.startsWith('(auth') ?? false;
+  
+    // If the user is not signed in and the initial segment is not anything in the auth group,
+    // redirect to the login page.
+    if (!user && !inAuthGroup) {
+      router.replace('/(app)/(auth)/login');
+    } 
+    // If the user is signed in and the initial segment is in the auth group,
+    // redirect to the main app screen.
+    else if (user && inAuthGroup) {
       router.replace('/(app)');
-    } else if (!user && !inAuthGroup) {
-      router.replace('/login');
     }
-  }, [user, loading, isSplashAnimationFinished, segments, router]);
+  }, [user, loading, segments, router, isSplashAnimationFinished]);
 
+  // This useEffect handles the splash screen fade-out animation.
   useEffect(() => {
-    if (isSplashAnimationFinished) {
+    if (!loading && isSplashAnimationFinished) {
       opacity.value = withTiming(0, { duration: 400 }, (finished) => {
         if (finished) {
           runOnJS(setAppReady)(true);
         }
       });
     }
-  }, [isSplashAnimationFinished, opacity]);
+  }, [loading, isSplashAnimationFinished, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -54,15 +56,13 @@ const InitialLayout = () => {
     };
   });
 
-  if (loading && !isSplashAnimationFinished) {
-    return <LoadingScreen onAnimationEnd={() => setSplashAnimationFinished(true)} />;
-  }
-
   return (
     <View style={{ flex: 1 }}>
+      {/* Slot is now always rendered, allowing navigation to work correctly */}
       <Slot />
       <StatusBar style="light" backgroundColor="#000000" translucent />
 
+      {/* The splash screen is an overlay that fades out, it no longer replaces the Slot */}
       {!isAppReady && (
         <Animated.View style={[{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }, animatedStyle]}>
           <LoadingScreen onAnimationEnd={() => setSplashAnimationFinished(true)} />
@@ -75,7 +75,7 @@ const InitialLayout = () => {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <InitialLayout />
+      <RootLayoutNav />
     </AuthProvider>
   );
 }
