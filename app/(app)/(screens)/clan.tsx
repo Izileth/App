@@ -1,9 +1,130 @@
 import { View, Text, ScrollView, Pressable } from "react-native";
-import { useState } from "react";
-import { clanMembers, clanTerritories, clanMissions } from "@/constants";
+import { useState, useEffect, useCallback } from "react";
+import { useUserProfile } from "@/app/hooks/useUserProfile";
+import { useClanManagement } from "@/app/hooks/use-clan-management";
+import { supabase } from "@/app/lib/supabase";
+
+// // import { clanMembers, clanTerritories, clanMissions } from "@/constants"; // Removed static imports
+
+// Define a type for dynamic clan members, assuming they are profiles
+type DynamicClanMember = {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  rank: string;
+  rank_jp: string;
+  bio: string | null; // Assuming speciality is part of bio or a separate field
+  // Add other fields as needed from the profiles table
+};
 
 export default function ClanScreen() {
   const [selectedTab, setSelectedTab] = useState("members");
+  const { profile, refetch: refetchProfile } = useUserProfile();
+  const [dynamicClanMembers, setDynamicClanMembers] = useState<DynamicClanMember[]>([]);
+  const [dynamicClanTerritories, setDynamicClanTerritories] = useState<any[]>([]);
+  const [dynamicClanMissions, setDynamicClanMissions] = useState<any[]>([]);
+
+
+  // Placeholder onDismiss for useClanManagement
+  const onDismiss = useCallback(() => {
+    // In a real scenario, this might navigate back or close a modal
+    console.log("Clan management dismissed.");
+  }, []);
+
+  const {
+  } = useClanManagement(profile, refetchProfile, onDismiss);
+
+  useEffect(() => {
+    const fetchClanMembers = async () => {
+      if (!profile?.clans?.id) {
+        setDynamicClanMembers([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, rank, rank_jp, bio') // Select relevant profile fields
+        .eq('clan_id', profile.clans.id);
+
+      if (error) {
+        console.error("Error fetching clan members:", error);
+        setDynamicClanMembers([]);
+      } else {
+        setDynamicClanMembers(data as DynamicClanMember[]);
+      }
+    };
+
+    fetchClanMembers();
+  }, [profile?.clans?.id]);
+
+  useEffect(() => {
+    const fetchClanMembers = async () => {
+      if (!profile?.clans?.id) {
+        setDynamicClanMembers([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, rank, rank_jp, bio') // Select relevant profile fields
+        .eq('clan_id', profile.clans.id);
+
+      if (error) {
+        console.error("Error fetching clan members:", error);
+        setDynamicClanMembers([]);
+      } else {
+        setDynamicClanMembers(data as DynamicClanMember[]);
+      }
+    };
+
+    fetchClanMembers();
+  }, [profile?.clans?.id]);
+
+  useEffect(() => {
+    const fetchClanTerritories = async () => {
+      if (!profile?.clans?.id) {
+        setDynamicClanTerritories([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('clan_territories')
+        .select('*')
+        .eq('clan_id', profile.clans.id);
+
+      if (error) {
+        console.error("Error fetching clan territories:", error);
+        setDynamicClanTerritories([]);
+      } else {
+        setDynamicClanTerritories(data);
+      }
+    };
+
+    fetchClanTerritories();
+  }, [profile?.clans?.id]);
+
+  useEffect(() => {
+    const fetchClanMissions = async () => {
+      if (!profile?.clans?.id) {
+        setDynamicClanMissions([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('clan_missions')
+        .select('*')
+        .eq('clan_id', profile.clans.id);
+
+      if (error) {
+        console.error("Error fetching clan missions:", error);
+        setDynamicClanMissions([]);
+      } else {
+        setDynamicClanMissions(data);
+      }
+    };
+
+    fetchClanMissions();
+  }, [profile?.clans?.id]);
 
 
 
@@ -22,21 +143,25 @@ export default function ClanScreen() {
       default: return { bg: "bg-green-950/20 border-green-900/50", text: "text-green-500" };
     }
   };
+  const clanName = profile?.clans?.name || "Nenhum Clã";
+  const clanTag = profile?.clans?.tag || "";
+  const clanEmblem = profile?.clans?.emblem || "組"; // Default emblem
+  const activeMembersCount = dynamicClanMembers.length;
 
   return (
     <ScrollView className="flex-1 bg-black">
       {/* HEADER */}
       <View className="relative h-56 overflow-hidden bg-gradient-to-b from-red-950 via-red-900 to-black">
         <View className="absolute inset-0 opacity-5">
-          <Text className="text-white text-9xl text-center mt-16">組</Text>
+          <Text className="text-white text-9xl text-center mt-16">{clanEmblem}</Text>
         </View>
 
         <View className="flex-1 justify-center items-center px-6 pt-14">
           <Text className="text-4xl font-black text-white tracking-wider text-center mb-2">
-            組織管理
+            {clanName}
           </Text>
           <Text className="text-xl font-bold text-red-500 tracking-widest mb-3">
-            SOSHIKI KANRI
+            {clanTag}
           </Text>
           <View className="h-px w-28 bg-red-600 mb-2" />
           <Text className="text-neutral-400 text-xs tracking-[0.3em] uppercase">
@@ -58,12 +183,12 @@ export default function ClanScreen() {
           </Text>
           <View className="flex-row justify-between mb-4">
             <View>
-              <Text className="text-white text-2xl font-bold mb-1">紅龍組</Text>
-              <Text className="text-red-500 text-sm font-semibold">Beniryu-gumi</Text>
+              <Text className="text-white text-2xl font-bold mb-1">{clanName}</Text>
+              <Text className="text-red-500 text-sm font-semibold">{clanTag}</Text>
             </View>
             <View className="items-end">
               <Text className="text-neutral-500 text-xs mb-1">Membros Ativos</Text>
-              <Text className="text-white text-2xl font-bold">47</Text>
+              <Text className="text-white text-2xl font-bold">{activeMembersCount}</Text>
             </View>
           </View>
           
@@ -151,21 +276,22 @@ export default function ClanScreen() {
               <View className="flex-1 h-px bg-neutral-800 ml-3" />
             </View>
 
-            {clanMembers.map((member) => (
+            {dynamicClanMembers.map((member) => (
               <View
                 key={member.id}
                 className="bg-zinc-950 border border-neutral-800 rounded-lg p-4 mb-3"
               >
                 <View className="flex-row justify-between items-start mb-3">
                   <View className="flex-row items-center gap-3 flex-1">
-                    <Text className="text-4xl">{member.avatar}</Text>
+                    {/* Placeholder for avatar, replace with Image component if avatar_url is available */}
+                    <Text className="text-4xl">👤</Text> 
                     <View className="flex-1">
                       <Text className="text-white text-base font-bold mb-1">
-                        {member.name}
+                        {member.username}
                       </Text>
                       <View className="flex-row items-center gap-2">
                         <Text className="text-red-500 text-xs font-semibold">
-                          {member.rankJP}
+                          {member.rank_jp}
                         </Text>
                         <Text className="text-neutral-600 text-xs">•</Text>
                         <Text className="text-neutral-400 text-xs">
@@ -174,29 +300,26 @@ export default function ClanScreen() {
                       </View>
                     </View>
                   </View>
-                  <View className={`px-3 py-1 rounded-full ${
-                    member.status === "active" ? "bg-green-950/30" : "bg-yellow-950/30"
-                  }`}>
-                    <Text className={`text-xs font-semibold ${
-                      member.status === "active" ? "text-green-500" : "text-yellow-500"
-                    }`}>
-                      {member.status === "active" ? "ATIVO" : "EM MISSÃO"}
+                  <View className={`px-3 py-1 rounded-full bg-green-950/30`}>
+                    <Text className={`text-xs font-semibold text-green-500`}>
+                      ATIVO
                     </Text>
                   </View>
                 </View>
 
                 <Text className="text-neutral-500 text-xs mb-3">
-                  Especialidade: <Text className="text-neutral-400">{member.speciality}</Text>
+                  Especialidade: <Text className="text-neutral-400">{member.bio || "N/A"}</Text>
                 </Text>
 
+                {/* Static progress bars for now */}
                 <View className="gap-2">
                   <View>
                     <View className="flex-row justify-between mb-1">
                       <Text className="text-neutral-500 text-xs">Lealdade</Text>
-                      <Text className="text-white text-xs font-semibold">{member.loyalty}%</Text>
+                      <Text className="text-white text-xs font-semibold">100%</Text>
                     </View>
                     <View className="bg-neutral-900 h-1.5 rounded-full overflow-hidden">
-                      <View className="bg-red-600 h-full" style={{ width: `${member.loyalty}%` }} />
+                      <View className="bg-red-600 h-full" style={{ width: `100%` }} />
                     </View>
                   </View>
 
@@ -204,20 +327,20 @@ export default function ClanScreen() {
                     <View className="flex-1">
                       <View className="flex-row justify-between mb-1">
                         <Text className="text-neutral-500 text-xs">Força</Text>
-                        <Text className="text-white text-xs">{member.strength}</Text>
+                        <Text className="text-white text-xs">90</Text>
                       </View>
                       <View className="bg-neutral-900 h-1.5 rounded-full overflow-hidden">
-                        <View className="bg-orange-600 h-full" style={{ width: `${member.strength}%` }} />
+                        <View className="bg-orange-600 h-full" style={{ width: `90%` }} />
                       </View>
                     </View>
 
                     <View className="flex-1">
                       <View className="flex-row justify-between mb-1">
                         <Text className="text-neutral-500 text-xs">Intel.</Text>
-                        <Text className="text-white text-xs">{member.intelligence}</Text>
+                        <Text className="text-white text-xs">80</Text>
                       </View>
                       <View className="bg-neutral-900 h-1.5 rounded-full overflow-hidden">
-                        <View className="bg-blue-600 h-full" style={{ width: `${member.intelligence}%` }} />
+                        <View className="bg-blue-600 h-full" style={{ width: `80%` }} />
                       </View>
                     </View>
                   </View>
@@ -241,7 +364,7 @@ export default function ClanScreen() {
               <View className="flex-1 h-px bg-neutral-800 ml-3" />
             </View>
 
-            {clanTerritories.map((territory) => (
+            {dynamicClanTerritories.map((territory) => (
               <View
                 key={territory.id}
                 className="bg-zinc-950 border border-neutral-800 rounded-lg p-4 mb-3"
@@ -312,7 +435,7 @@ export default function ClanScreen() {
               </Text>
             </View>
 
-            {clanMissions.map((mission) => {
+            {dynamicClanMissions.map((mission) => {
               const diffStyle = getDifficultyColor(mission.difficulty);
               return (
                 <View
@@ -351,7 +474,7 @@ export default function ClanScreen() {
                     <View>
                       <Text className="text-neutral-500 text-xs mb-1">Membros</Text>
                       <Text className="text-white text-xs font-semibold">
-                        👥 {mission.required}
+                        👥 {mission.required_members}
                       </Text>
                     </View>
                   </View>

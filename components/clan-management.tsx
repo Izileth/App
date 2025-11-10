@@ -1,10 +1,11 @@
-import { forwardRef, useImperativeHandle, useRef,} from 'react';
-import { View, Text, Pressable, TextInput, ScrollView, ActivityIndicator, StyleSheet, Image } from 'react-native';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, Image} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { AppBottomSheet } from './ui/bottom-sheet';
 import { useClanManagement, ClanManagementView } from '../app/hooks/use-clan-management';
 import { Profile } from '../app/lib/types';
-
+import { CustomButton } from './ui/custom-button';
+import { KanjiLoader } from './ui/kanji-loader';
 // Separate FormFields component to prevent re-renders
 type FormFieldsProps = {
   name: string;
@@ -46,7 +47,7 @@ const FormFields = ({
         placeholder="TAG (2-5 letras)"
         placeholderTextColor="#666"
         value={tag}
-        onChangeText={t => setTag(t.replace(/[^A-Z0-9]/g, '').toUpperCase())} // Filter and uppercase
+        onChangeText={t => setTag(t.replace(/[^A-Z0-9]/g, '').toUpperCase())}
         maxLength={5}
         autoCapitalize="characters"
       />
@@ -54,7 +55,6 @@ const FormFields = ({
     </View>
   </>
 );
-
 
 type Props = {
   profile?: Profile | null;
@@ -80,7 +80,7 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
 
   const renderContent = () => {
     if (!profile) return <View />;
-    if (loading && view !== 'join') return <View style={styles.centered}><ActivityIndicator size="large" color="#DC2626" /></View>;
+    if (loading && view !== 'join') return <View style={styles.centered}><KanjiLoader /></View>;
 
     const BackButton = ({ view, title, jpTitle }: { view: ClanManagementView, title: string, jpTitle: string }) => (
       <Pressable onPress={() => handleSetView(view, title, jpTitle)} style={styles.backButton}>
@@ -106,7 +106,7 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
         return (
           <>
             <BackButton view="main" title="Junte-se a um Clã" jpTitle="氏族に参加" />
-            {loading ? <View style={styles.centered}><ActivityIndicator size="large" color="#DC2626" /></View> :
+            {loading ? <View style={styles.centered}><KanjiLoader /></View> :
               <ScrollView>
                 {clans.map(clan => (
                   <View key={clan.id} style={styles.clanItem}>
@@ -140,9 +140,7 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
                 avatarUrl={avatarUrl} bannerUrl={bannerUrl}
                 handlePickImage={handlePickImage}
               />
-              <Pressable style={styles.actionButton} onPress={handleCreateClan}>
-                <Text style={styles.actionButtonText}>Criar e Entrar</Text>
-              </Pressable>
+              <CustomButton onPress={handleCreateClan} title="Criar e Entrar" isLoading={loading} />
             </ScrollView>
           </>
         );
@@ -197,9 +195,7 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
                 avatarUrl={avatarUrl} bannerUrl={bannerUrl}
                 handlePickImage={handlePickImage}
               />
-              <Pressable style={styles.actionButton} onPress={handleUpdateClan}>
-                <Text style={styles.actionButtonText}>Salvar Alterações</Text>
-              </Pressable>
+              <CustomButton onPress={handleUpdateClan} title="Salvar Alterações" isLoading={loading} />
             </ScrollView>
           </>
         );
@@ -227,8 +223,21 @@ const styles = StyleSheet.create({
   formLabel: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
   input: { backgroundColor: '#000000', color: 'white', padding: 15, borderRadius: 10, marginBottom: 15, fontSize: 16, borderColor: '#303030', borderWidth: 1 },
   row: { flexDirection: 'row' },
-  actionButton: { backgroundColor: '#DC2626', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 10, marginBottom: 40 },
-  actionButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  customButton: { 
+    padding: 15, 
+    borderRadius: 10, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    marginTop: 10, 
+    marginBottom: 40,
+    minHeight: 56,
+  },
+  customButtonText: { 
+    color: 'white', 
+    fontSize: 16, 
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
   clanItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
   clanAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 15, backgroundColor: '#2a2a2a' },
   clanName: { color: 'white', fontSize: 18, fontWeight: 'bold' },

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Lock, Eye, EyeOff } from "lucide-react-native";
 import { supabase } from "../../lib/supabase";
+import { CustomButton } from "../../../components/ui/custom-button";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -31,6 +33,7 @@ export default function ResetPasswordScreen() {
       return;
     }
 
+    setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: password });
 
@@ -50,6 +53,8 @@ export default function ResetPasswordScreen() {
       } else {
         setErrorMessage("Ocorreu um erro desconhecido.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,12 +124,12 @@ export default function ResetPasswordScreen() {
           ) : null}
 
           {/* Reset Password Button */}
-          <Pressable 
+          <CustomButton
+            title="Redefinir senha"
             onPress={handleResetPassword}
-            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40 mt-6"
-          >
-            <Text className="text-lg font-bold text-white tracking-wide">Redefinir senha</Text>
-          </Pressable>
+            isLoading={loading}
+            className="mt-6 w-full"
+          />
 
           {/* Divider */}
           <View className="flex-row items-center my-8">

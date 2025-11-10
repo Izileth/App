@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { User, Lock, Eye, EyeOff, Mail } from "lucide-react-native";
 import { supabase } from "../../lib/supabase";
+import { CustomButton } from "../../../components/ui/custom-button";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -39,6 +41,7 @@ export default function RegisterScreen() {
       return;
     }
 
+    setLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
         email: email,
@@ -66,6 +69,8 @@ export default function RegisterScreen() {
       } else {
         setErrorMessage("Ocorreu um erro desconhecido durante o cadastro.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,12 +165,12 @@ export default function RegisterScreen() {
           ) : null}
 
           {/* Register Button */}
-          <Pressable 
+          <CustomButton
+            title="Cadastrar"
             onPress={handleRegister}
-            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40 mt-6"
-          >
-            <Text className="text-lg font-bold text-white tracking-wide">Cadastrar</Text>
-          </Pressable>
+            isLoading={loading}
+            className="mt-6 w-full"
+          />
 
           {/* Divider */}
           <View className="flex-row items-center my-8">

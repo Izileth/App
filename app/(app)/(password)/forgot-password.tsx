@@ -3,10 +3,12 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Mail } from "lucide-react-native";
 import { supabase } from "../../lib/supabase";
+import { CustomButton } from "../../../components/ui/custom-button";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -26,6 +28,7 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
+    setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'exp://192.168.3.8:8081/--/(app)/(password)/reset-password', // IMPORTANT: Replace with your actual deep link
@@ -47,6 +50,8 @@ export default function ForgotPasswordScreen() {
       } else {
         setErrorMessage("Ocorreu um erro desconhecido.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -93,12 +98,12 @@ export default function ForgotPasswordScreen() {
           ) : null}
 
           {/* Send Link Button */}
-          <Pressable 
+          <CustomButton
+            title="Enviar link de redefinição"
             onPress={handleSendLink}
-            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40 mt-6"
-          >
-            <Text className="text-lg font-bold text-white tracking-wide">Enviar link de redefinição</Text>
-          </Pressable>
+            isLoading={loading}
+            className="mt-6 w-full"
+          />
 
           {/* Divider */}
           <View className="flex-row items-center my-8">

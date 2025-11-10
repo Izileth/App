@@ -8,6 +8,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { FontAwesome } from '@expo/vector-icons';
 import { ClanManagementModal } from "../../../components/clan-management";
 import type { Profile } from "@/app/lib/types";
+import { CustomButton } from "../../../components/ui/custom-button";
+
 export default function ProfileScreen() {
   const { logout, user } = useAuth();
   const { profile, loading, error, refetch } = useUserProfile();
@@ -29,6 +31,8 @@ export default function ProfileScreen() {
   const [editBannerUrl, setEditBannerUrl] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -114,7 +118,7 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     if (!user) return;
-
+    setSaving(true);
     try {
       if (newPassword) {
         const { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
@@ -159,7 +163,14 @@ export default function ProfileScreen() {
       refetch();
     } catch (e: any) {
       Alert.alert("Erro ao salvar", e.message);
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await logout();
   };
 
   const formatDate = (dateString: string) => {
@@ -180,9 +191,7 @@ export default function ProfileScreen() {
       <View className="flex-1 justify-center items-center bg-black px-6">
         <Text className="text-white text-xl font-bold text-center mb-4">Crie seu Perfil</Text>
         <Text className="text-neutral-400 text-center mb-6">Complete seu perfil para começar sua jornada.</Text>
-        <Pressable onPress={handlePresentModal} className="p-3 bg-red-600 rounded-lg">
-          <Text className="text-white font-bold">Criar Perfil</Text>
-        </Pressable>
+        <CustomButton title="Criar Perfil" onPress={handlePresentModal} className="w-full" />
       </View>
     );
   }
@@ -287,7 +296,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center justify-between">
               <View>
                 <Text className="text-neutral-500 text-xs font-semibold mb-1">MEMBRO DESDE</Text>
-                <Text className="text-white text-lg font-bold">{formatDate(profile.joined_date)}</Text>
+                <Text className="text-white text-lg font-bold">{formatDate(profile?.joined_date || '2025')}</Text>
               </View>
               <View className="bg-black px-3 py-2 rounded-lg">
                 <Text className="text-red-500 text-2xl">龍</Text>
@@ -305,17 +314,19 @@ export default function ProfileScreen() {
 
         {/* ACTION BUTTONS */}
         <View className="px-6 pb-6">
-          <Pressable onPress={handlePresentModal} className="active:opacity-70 mb-3">
-            <View className="bg-black border border-zinc-900 rounded-xl py-3 items-center">
-              <Text className="text-white font-bold text-base"> Editar Perfil</Text>
-            </View>
-          </Pressable>
-
-          <Pressable onPress={logout} className="active:opacity-70">
-            <View className="bg-red-900/20 border border-red-800 rounded-xl py-3 items-center">
-              <Text className="text-red-400 font-bold text-base"> Sair da Conta</Text>
-            </View>
-          </Pressable>
+          <CustomButton
+            title="Editar Perfil"
+            onPress={handlePresentModal}
+            className="w-full bg-black border py-3 border-zinc-900 mb-3"
+            textClassName="text-white"
+          />
+          <CustomButton
+            title="Sair da Conta"
+            onPress={handleLogout}
+            isLoading={loggingOut}
+            className="w-full bg-red-900/20 border py-3 border-red-800"
+            textClassName="text-red-400"
+          />
         </View>
       </ScrollView>
 
@@ -371,9 +382,13 @@ export default function ProfileScreen() {
           <TextInput className="bg-black text-white p-3 rounded-lg border border-zinc-900" value={newPassword} onChangeText={setNewPassword} placeholder="Deixe em branco para não alterar" placeholderTextColor="#666" secureTextEntry />
         </View>
 
-        <Pressable onPress={handleSave} className="p-3  bg-red-600 rounded-lg items-center mb-4">
-          <Text className="text-white font-bold text-sm">Salvar Alterações</Text>
-        </Pressable>
+        <CustomButton
+          title="Salvar Alterações"
+          onPress={handleSave}
+          isLoading={saving}
+          className="w-full py-3 mb-4"
+          textClassName="text-sm"
+        />
       </AppBottomSheet>
       <ClanManagementModal
         ref={clanSheetRef}

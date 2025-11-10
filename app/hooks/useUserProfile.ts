@@ -1,27 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/auth-context';
-
-type Profile = {
-  id: string;
-  username: string;
-  username_jp: string;
-  level: number;
-  bio: string;
-  slug: string;
-  website: string;
-  github: string;
-  twitter: string;
-  avatar_url: string;
-  banner_url: string;
-  rank: string;
-  rank_jp: string;
-  joined_date: string;
-  updated_at: string;
-  clans: {
-    name: string;
-  } | null;
-};
+import { Profile } from '../lib/types';
 
 export const useUserProfile = () => {
   const { user } = useAuth();

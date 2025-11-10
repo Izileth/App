@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, User } from "lucide-react-native";
 import { useAuth } from "../../context/auth-context";
+import { CustomButton } from "../../../components/ui/custom-button";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -10,6 +11,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -19,6 +21,7 @@ export default function LoginScreen() {
       setErrorMessage("Por favor, preencha todos os campos.");
       return;
     }
+    setLoading(true);
     try {
       await signIn(email, password);
       // The router replacement is handled by the AuthProvider's useProtectedRoute hook
@@ -28,6 +31,8 @@ export default function LoginScreen() {
       } else {
         setErrorMessage("Ocorreu um erro desconhecido durante o login.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,12 +99,13 @@ export default function LoginScreen() {
           </Pressable>
 
           {/* Login Button */}
-          <Pressable 
+          <CustomButton 
+            title="Entrar"
             onPress={handleLogin}
-            className="w-full h-14 bg-red-600 rounded-xl justify-center items-center active:bg-red-700 shadow-lg shadow-red-600/40"
-          >
-            <Text className="text-lg font-bold text-white tracking-wide">Entrar</Text>
-          </Pressable>
+            isLoading={loading}
+            className="h-14 bg-red-600 rounded-xl active:bg-red-700 shadow-lg shadow-red-600/40 w-full"
+            textClassName="text-lg font-bold text-white tracking-wide"
+          />
 
           {/* Divider */}
           <View className="flex-row items-center my-8">
@@ -117,11 +123,11 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        {/* Footer */}
-        <Text className="absolute bottom-8 text-neutral-700 text-xs italic">
-          Protegido pela honra do clã
-        </Text>
+          {/* Footer */}
+          <Text className="absolute bottom-8 text-neutral-700 text-xs italic">
+            Protegido pela honra do clã
+          </Text>
+        </View>
       </View>
-    </View>
-  );
-}
+    );
+  }
