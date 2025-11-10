@@ -72,34 +72,35 @@ export default function ProfileScreen() {
   };
 
   const uploadImage = async (uri: string, bucket: 'avatars' | 'banners'): Promise<string | null> => {
-    if (!user || !uri.startsWith('file://')) {
+    if (!user) {
       return null;
     }
+    try {
+      const fileExt = uri.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      const fileType = `image/${fileExt}`;
 
-    const fileExt = uri.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${user.id}/${fileName}`;
-    const fileType = `image/${fileExt}`;
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-    const formData = new FormData();
-    formData.append('file', {
-      uri,
-      name: fileName,
-      type: fileType,
-    } as any);
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, blob, {
+          contentType: fileType,
+          upsert: true,
+        });
 
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, formData, {
-        upsert: true,
-      });
+      if (error) {
+        throw error;
+      }
 
-    if (error) {
-      throw error;
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
+      return publicUrl;
+    } catch (e: any) {
+      Alert.alert('Erro ao fazer upload da imagem', e.message);
+      return null;
     }
-
-    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
-    return publicUrl;
   };
 
   const slugify = (text: string) => {
