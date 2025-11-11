@@ -65,12 +65,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await Notifications.scheduleNotificationAsync({
           content: {
             title: "Login Bem-sucedido! 🚀",
-            body: 'Bem-vindo de volta!',
+            body: "Bom te ver de novo!",
+            sound: 'default',
+            data: { rota: "Home" },
+            attachments: [
+              {
+                identifier: "login-image",
+                url: "./assets/images/icon.png  ", // Ensure this path is correct
+                type: "image",
+              }
+            ],
           },
-          trigger: { 
-            seconds: 1,
-          },
+          trigger: { type: 'timeInterval', seconds: 1 }, // Add trigger property to schedule notification after 1 second
         });
+
+        
+
 
     },
     logout: async () => {

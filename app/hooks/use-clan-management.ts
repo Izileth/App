@@ -17,7 +17,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tag, setTag] = useState('');
-  const [emblem, setEmblem] = useState('');
+  const [emblem, setEmblem] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
     setName(clan?.name || '');
     setDescription(clan?.description || '');
     setTag(clan?.tag || '');
-    setEmblem(clan?.emblem || '');
+    setEmblem(clan?.emblem ? clan.emblem.split('') : []);
     setAvatarUrl(clan?.avatar_url || null);
     setBannerUrl(clan?.banner_url || null);
   }, [profile]);
@@ -92,7 +92,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'livePhotos',
       allowsEditing: true,
       aspect: type === 'avatar' ? [1, 1] : [16, 9],
       quality: 0.8,
@@ -125,7 +125,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
     setLoading(true);
     try {
       const tagValue = tag.trim().toUpperCase();
-      const emblemValue = emblem.trim();
+      const emblemValue = emblem.join('');
 
       const { data: newClan, error: createError } = await supabase
         .from('clans')
@@ -206,7 +206,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
       const finalAvatarUrl = avatarUrl ? await uploadImage(avatarUrl, profile.clans.id, 'avatar') : null;
       const finalBannerUrl = bannerUrl ? await uploadImage(bannerUrl, profile.clans.id, 'banner') : null;
       const tagValue = tag.trim().toUpperCase();
-      const emblemValue = emblem.trim();
+      const emblemValue = emblem.join('');
 
       const updates = {
         name: name.trim(),

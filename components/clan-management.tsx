@@ -1,11 +1,13 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, Image} from 'react-native';
+import { View, Text, Pressable, TextInput, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { AppBottomSheet } from './ui/bottom-sheet';
 import { useClanManagement, ClanManagementView } from '../app/hooks/use-clan-management';
 import { Profile } from '../app/lib/types';
 import { CustomButton } from './ui/custom-button';
 import { KanjiLoader } from './ui/kanji-loader';
+import KanjiDictionary from './ui/KanjiDictionary';
+
 // Separate FormFields component to prevent re-renders
 type FormFieldsProps = {
   name: string;
@@ -14,8 +16,8 @@ type FormFieldsProps = {
   setDescription: (description: string) => void;
   tag: string;
   setTag: (tag: string) => void;
-  emblem: string;
-  setEmblem: (emblem: string) => void;
+  emblem: string[];
+  setEmblem: (emblem: string[]) => void;
   avatarUrl: string | null;
   bannerUrl: string | null;
   handlePickImage: (type: 'avatar' | 'banner') => Promise<void>;
@@ -24,37 +26,65 @@ type FormFieldsProps = {
 const FormFields = ({
   name, setName, description, setDescription, tag, setTag, emblem, setEmblem,
   avatarUrl, bannerUrl, handlePickImage
-}: FormFieldsProps) => (
-  <>
-    <Text style={styles.formLabel}>Imagens do Clã</Text>
-    <View style={styles.imagePickerContainer}>
-      <Pressable onPress={() => handlePickImage('avatar')} style={styles.imagePicker}>
-        <Image source={{ uri: avatarUrl || undefined }} style={styles.avatar} />
-        <Text style={styles.imagePickerText}>Avatar</Text>
-      </Pressable>
-      <Pressable onPress={() => handlePickImage('banner')} style={styles.imagePicker}>
-        <Image source={{ uri: bannerUrl || undefined }} style={styles.banner} />
-        <Text style={styles.imagePickerText}>Banner</Text>
-      </Pressable>
-    </View>
+}: FormFieldsProps) => {
+  const handleKanjiSelect = (kanji: string) => {
+    if (emblem.length < 5) {
+      setEmblem([...emblem, kanji]);
+    }
+  };
 
-    <Text style={styles.formLabel}>Detalhes do Clã</Text>
-    <TextInput style={styles.input} placeholder="Nome do Clã" placeholderTextColor="#666" value={name} onChangeText={setName} />
-    <TextInput style={styles.input} placeholder="Descrição" placeholderTextColor="#666" value={description} onChangeText={setDescription} multiline />
-    <View style={styles.row}>
-      <TextInput
-        style={[styles.input, {flex: 1}]}
-        placeholder="TAG (2-5 letras)"
-        placeholderTextColor="#666"
-        value={tag}
-        onChangeText={t => setTag(t.replace(/[^A-Z0-9]/g, '').toUpperCase())}
-        maxLength={5}
-        autoCapitalize="characters"
-      />
-      <TextInput style={[styles.input, {flex: 1, marginLeft: 10}]} placeholder="Emblema (e.g., 龍)" placeholderTextColor="#666" value={emblem} onChangeText={setEmblem} maxLength={5} />
-    </View>
-  </>
-);
+  const clearEmblem = () => {
+    setEmblem([]);
+  };
+
+  return (
+    <>
+      <Text style={styles.formLabel}>Imagens do Clã</Text>
+      <View style={styles.imagePickerContainer}>
+        <Pressable onPress={() => handlePickImage('avatar')} style={styles.imagePicker}>
+          <Image source={{ uri: avatarUrl || undefined }} style={styles.avatar} />
+          <Text style={styles.imagePickerText}>Avatar</Text>
+        </Pressable>
+        <Pressable onPress={() => handlePickImage('banner')} style={styles.imagePicker}>
+          <Image source={{ uri: bannerUrl || undefined }} style={styles.banner} />
+          <Text style={styles.imagePickerText}>Banner</Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.formLabel}>Detalhes do Clã</Text>
+      <TextInput style={styles.input} placeholder="Nome do Clã" placeholderTextColor="#666" value={name} onChangeText={setName} />
+      <TextInput style={styles.input} placeholder="Descrição" placeholderTextColor="#666" value={description} onChangeText={setDescription} multiline />
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, { flex: 1 }]}
+          placeholder="TAG (2-5 letras)"
+          placeholderTextColor="#666"
+          value={tag}
+          onChangeText={t => setTag(t.replace(/[^A-Z0-9]/g, '').toUpperCase())}
+          maxLength={5}
+          autoCapitalize="characters"
+        />
+      </View>
+      <View className="mb-4">
+        <Text style={styles.formLabel}>Emblema do Clã</Text>
+        <View className="bg-black p-3 rounded-lg border border-zinc-900 flex-row justify-center items-center min-h-[50px]">
+          {emblem.map((kanji, index) => (
+            <Text key={index} className="text-white text-2xl">
+              {kanji}
+            </Text>
+          ))}
+        </View>
+        <TouchableOpacity onPress={clearEmblem}>
+          <Text className="text-red-500 text-xs mt-2 text-right">Limpar</Text>
+        </TouchableOpacity>
+      </View>
+      <View className="mb-4">
+        <KanjiDictionary onSelect={handleKanjiSelect} selectedKanji={emblem} />
+      </View>
+    </>
+  );
+};
+
 
 type Props = {
   profile?: Profile | null;
@@ -110,8 +140,8 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
               <ScrollView>
                 {clans.map(clan => (
                   <View key={clan.id} style={styles.clanItem}>
-                    {clan.avatar_url && <Image source={{uri: clan.avatar_url}} style={styles.clanAvatar} />}
-                    <View style={{flex: 1}}>
+                    {clan.avatar_url && <Image source={{ uri: clan.avatar_url }} style={styles.clanAvatar} />}
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.clanName}>{clan.name} {clan.tag ? `[${clan.tag}]` : ''}</Text>
                       <View style={styles.ownerInfo}>
                         <FontAwesome name="user-secret" size={12} color="#a1a1aa" />
@@ -140,7 +170,13 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
                 avatarUrl={avatarUrl} bannerUrl={bannerUrl}
                 handlePickImage={handlePickImage}
               />
-              <CustomButton onPress={handleCreateClan} title="Criar e Entrar" isLoading={loading} />
+              <CustomButton
+                onPress={handleCreateClan}
+                title="Criar e Entrar"
+                isLoading={loading}
+                className="w-full  bg-red-900/20 border py-3 mb-8  border-red-800"
+                textClassName="text-sm text-zinc-50 font-bold"
+              />
             </ScrollView>
           </>
         );
@@ -148,17 +184,17 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
         if (!profile.clans) return null;
         return (
           <View style={styles.manageView}>
-            {profile.clans.banner_url && <Image source={{uri: profile.clans.banner_url}} style={styles.manageBanner} />}
+            {profile.clans.banner_url && <Image source={{ uri: profile.clans.banner_url }} style={styles.manageBanner} />}
             <View style={styles.manageHeader}>
-              {profile.clans.avatar_url ? 
-                <Image source={{uri: profile.clans.avatar_url}} style={styles.manageAvatar} /> :
-                <View style={styles.manageAvatar}><Text style={{fontSize: 40}}>{profile.clans.emblem || '氏'}</Text></View>
+              {profile.clans.avatar_url ?
+                <Image source={{ uri: profile.clans.avatar_url }} style={styles.manageAvatar} /> :
+                <View style={styles.manageAvatar}><Text style={{ fontSize: 40 }}>{profile.clans.emblem || '氏'}</Text></View>
               }
               <Text style={styles.clanTitle}>{profile.clans.name} {profile.clans.tag ? `[${profile.clans.tag}]` : ''}</Text>
               {profile.clans.profiles?.username && (
                 <View style={styles.ownerInfo}>
                   <Text style={styles.ownerName}>Criado por {profile.clans.profiles.username}</Text>
-                  {isOwner && <FontAwesome name="star" size={14} color="#facc15" style={{marginLeft: 5}} />}
+                  {isOwner && <FontAwesome name="star" size={14} color="#facc15" style={{ marginLeft: 5 }} />}
                 </View>
               )}
             </View>
@@ -175,9 +211,9 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
               <Text style={styles.menuButtonText}>Sair do Clã</Text>
             </Pressable>
             {isOwner && (
-              <Pressable style={[styles.menuButton, {marginTop: 20}]} onPress={handleDeleteClan}>
+              <Pressable style={[styles.menuButton, { marginTop: 20 }]} onPress={handleDeleteClan}>
                 <FontAwesome name="trash" size={20} color="#ef4444" />
-                <Text style={[styles.menuButtonText, {color: '#ef4444'}]}>Excluir Clã</Text>
+                <Text style={[styles.menuButtonText, { color: '#ef4444' }]}>Excluir Clã</Text>
               </Pressable>
             )}
           </View>
@@ -195,7 +231,13 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
                 avatarUrl={avatarUrl} bannerUrl={bannerUrl}
                 handlePickImage={handlePickImage}
               />
-              <CustomButton onPress={handleUpdateClan} title="Salvar Alterações" isLoading={loading} />
+              <CustomButton
+                onPress={handleUpdateClan}
+                title="Salvar Alterações"
+                isLoading={loading}
+                className="w-full  bg-red-900/20 border py-3 mb-8  border-red-800"
+                textClassName="text-sm text-zinc-50 font-bold"
+              />
             </ScrollView>
           </>
         );
@@ -223,18 +265,18 @@ const styles = StyleSheet.create({
   formLabel: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
   input: { backgroundColor: '#000000', color: 'white', padding: 15, borderRadius: 10, marginBottom: 15, fontSize: 16, borderColor: '#303030', borderWidth: 1 },
   row: { flexDirection: 'row' },
-  customButton: { 
-    padding: 15, 
-    borderRadius: 10, 
-    alignItems: 'center', 
+  customButton: {
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10, 
+    marginTop: 10,
     marginBottom: 40,
     minHeight: 56,
   },
-  customButtonText: { 
-    color: 'white', 
-    fontSize: 16, 
+  customButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },

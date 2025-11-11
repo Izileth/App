@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { Link } from "expo-router";
 import { useAuth } from "../context/auth-context";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { CustomButton } from "@/components/ui/custom-button";
+import { KanjiLoader } from "@/components/ui/kanji-loader";
 
 export default function HomeScreen() {
-  const { logout } = useAuth();
-   const [loggingOut, setLoggingOut] = useState(false);
+  const { logout, user } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
   const { profile, loading, error } = useUserProfile();
 
-    const handleLogout = async () => {
+  const handleLogout = async () => {
     setLoggingOut(true);
     await logout();
   };
@@ -18,7 +19,8 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-black">
-        <ActivityIndicator size="large" color="#DC2626" />
+        <KanjiLoader />
+        
       </View>
     );
   }
@@ -47,38 +49,37 @@ export default function HomeScreen() {
 
   return (
     <ScrollView className="flex-1 bg-black">
-      {/* HERO SECTION com gradiente vermelho dramático */}
-      <View className="relative h-80 overflow-hidden bg-gradient-to-b from-red-950 via-red-900 to-black">
-        {/* Padrão decorativo japonês */}
-        <View className="absolute inset-0 opacity-5">
-          <Text className="text-white text-9xl text-center mt-20">
-            龍虎
-          </Text>
+      {/* USER HEADER */}
+      <View className="relative bg-gradient-to-b from-zinc-900 to-black pt-20 pb-10">
+          {profile.banner_url ? (
+        <Image source={{ uri: profile.banner_url }} className="absolute inset-0 w-full h-full" />
+      ) : (
+        <View className="absolute inset-0 bg-gradient-to-b from-red-950 via-red-900 to-black" />
+      )}
+      <View className="absolute inset-0 bg-black/50" />
+        <View className="items-center px-6">
+          <Image
+            source={{ uri: profile.avatar_url || 'https://placehold.co/200x200/000000/FFF?text=' + profile.username?.charAt(0) }}
+            className="w-24 h-24 rounded-full border-4 border-red-600 mb-4"
+          />
+          <Text className="text-3xl font-bold text-white">{profile.username}</Text>
+          {profile.username_jp && <Text className="text-lg font-bold text-red-500">{profile.username_jp}</Text>}
+          <Text className="text-sm text-neutral-400 mt-1 mb-6">{user?.email}</Text>
         </View>
-
-        {/* Conteúdo do Hero */}
-        <View className="flex-1 justify-center items-center px-6 pt-14">
+        <View className="mt-6 flex-row justify-around">
           <View className="items-center">
-
-            {/* Título Principal */}
-            <Text className="text-5xl font-black text-white tracking-wider text-center mb-2">
-              罪
-            </Text>
-            <Text className="text-2xl font-bold text-red-500 tracking-widest">
-              TSUMI
-            </Text>
-
-            <View className="h-px w-32 bg-red-600 my-4" />
-
-            <Text className="text-neutral-400 text-xs tracking-[0.3em] uppercase">
-              Yakuza Brotherhood
-            </Text>
+            <Text className="text-lg font-bold text-white">{profile.rank || 'Wakashu'}</Text>
+            <Text className="text-sm text-neutral-500">Rank</Text>
+          </View>
+          <View className="items-center">
+            <Text className="text-lg font-bold text-white">{profile.level || 1}</Text>
+            <Text className="text-sm text-neutral-500">Level</Text>
+          </View>
+          <View className="items-center">
+            <Text className="text-lg font-bold text-white">{profile.clans?.name || 'No Clan'}</Text>
+            <Text className="text-sm text-neutral-500">Clan</Text>
           </View>
         </View>
-
-        {/* Detalhes vermelhos laterais */}
-        <View className="absolute left-0 top-40 w-1 h-32 bg-red-600" />
-        <View className="absolute right-0 top-40 w-1 h-32 bg-red-600" />
       </View>
 
       {/* CONTEÚDO PRINCIPAL */}
