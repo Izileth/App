@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import { View, Text, ScrollView, Pressable, Image} from "react-native";
 import { Link } from "expo-router";
 import { useAuth } from "../context/auth-context";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { CustomButton } from "@/components/ui/custom-button";
 import { KanjiLoader } from "@/components/ui/kanji-loader";
 
+
+
 export default function HomeScreen() {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
   const { profile, loading, error } = useUserProfile();
 
@@ -20,7 +22,6 @@ export default function HomeScreen() {
     return (
       <View className="flex-1 justify-center items-center bg-black">
         <KanjiLoader />
-        
       </View>
     );
   }
@@ -49,50 +50,134 @@ export default function HomeScreen() {
 
   return (
     <ScrollView className="flex-1 bg-black">
-      {/* USER HEADER */}
-      <View className="relative bg-gradient-to-b from-zinc-900 to-black pt-20 pb-10">
-          {profile.banner_url ? (
-        <Image source={{ uri: profile.banner_url }} className="absolute inset-0 w-full h-full" />
-      ) : (
-        <View className="absolute inset-0 bg-gradient-to-b from-red-950 via-red-900 to-black" />
-      )}
-      <View className="absolute inset-0 bg-black/50" />
-        <View className="items-center px-6">
+      {/* HEADER MELHORADO */}
+      <View className="relative h-96">
+        {/* Banner de fundo */}
+        {profile.banner_url ? (
           <Image
-            source={{ uri: profile.avatar_url || 'https://placehold.co/200x200/000000/FFF?text=' + profile.username?.charAt(0) }}
-            className="w-24 h-24 rounded-full border-4 border-red-600 mb-4"
+            source={{ uri: profile.banner_url }}
+            className="absolute inset-0 w-full h-full"
           />
-          <Text className="text-3xl font-bold text-white">{profile.username}</Text>
-          {profile.username_jp && <Text className="text-lg font-bold text-red-500">{profile.username_jp}</Text>}
-          <Text className="text-sm text-neutral-400 mt-1 mb-6">{user?.email}</Text>
+        ) : (
+          <View className="absolute inset-0 bg-gradient-to-b from-red-950 via-red-900 to-black" />
+        )}
+
+        {/* Overlay com gradiente suave que vai escurecendo */}
+        <View className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black" />
+
+        {/* Padrão decorativo japonês sutil */}
+        <View className="absolute inset-0 opacity-5">
+          <Text className="text-red-500 text-9xl text-center mt-8">罪</Text>
         </View>
-        <View className="mt-6 flex-row justify-around">
-          <View className="items-center">
-            <Text className="text-lg font-bold text-white">{profile.rank || 'Wakashu'}</Text>
-            <Text className="text-sm text-neutral-500">Rank</Text>
+
+        {/* Conteúdo do Header */}
+        <View className="flex-1 z-50 justify-end pb-6 px-6">
+          {/* Avatar e Info Principal */}
+          <View className="flex-row items-end mb-6">
+            {/* Avatar com borda animada */}
+            <View className="relative">
+              <View className="absolute -inset-1 bg-gradient-to-br from-red-600 via-red-500 to-orange-600 rounded-full blur-sm" />
+              <Image
+                source={{
+                  uri: profile.avatar_url || `https://placehold.co/200x200/000000/FFF?text=${profile.username?.charAt(0)}`
+                }}
+                className="w-28 h-28 rounded-full border-4 border-black relative"
+              />
+              {/* Badge de nível */}
+              <View className="absolute -bottom-2 -right-2 bg-red-600 rounded-full px-3 py-1 border-2 border-black">
+                <Text className="text-white text-xs font-bold">Lv {profile.level || 1}</Text>
+              </View>
+            </View>
+
+            {/* Nome e Rank */}
+            <View className="flex-1 ml-4 mb-2">
+              <Text className="text-white text-2xl font-bold tracking-tight">
+                {profile.username}
+              </Text>
+              {profile.username_jp && (
+                <Text className="text-red-400 text-lg font-semibold mt-0.5">
+                  {profile.username_jp}
+                </Text>
+              )}
+              <View className="flex-row items-center mt-2 gap-2">
+                <View className="bg-red-950/60 px-3 py-1 rounded-full border border-red-800/40">
+                  <Text className="text-red-400 text-xs font-bold">
+                    {profile.rank_jp || '若衆'}
+                  </Text>
+                </View>
+                <Text className="text-neutral-500 text-xs">•</Text>
+                <Text className="text-neutral-400 text-xs">
+                  {profile.rank || 'Wakashu'}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View className="items-center">
-            <Text className="text-lg font-bold text-white">{profile.level || 1}</Text>
-            <Text className="text-sm text-neutral-500">Level</Text>
-          </View>
-          <View className="items-center">
-            <Text className="text-lg font-bold text-white">{profile.clans?.name || 'No Clan'}</Text>
-            <Text className="text-sm text-neutral-500">Clan</Text>
+
+          {/* Stats Cards */}
+          <View className="flex-row gap-3">
+            {/* Lealdade */}
+            <View className="flex-1 bg-black/80 backdrop-blur-sm rounded-xl p-3 border border-zinc-800/50">
+              <View className="flex-row items-center justify-between mb-1">
+                <Text className="text-neutral-400 text-xs">Lealdade</Text>
+                <Text className="text-red-500 text-xs">忠</Text>
+              </View>
+              <Text className="text-white text-lg font-bold">
+                {profile.level || 0}
+              </Text>
+              <View className="h-1 bg-zinc-800 rounded-full mt-2 overflow-hidden">
+                <View
+                  className="h-full bg-gradient-to-r from-red-600 to-red-500 rounded-full"
+                  style={{ width: `${Math.min((profile.level || 0) / 10, 100)}%` }}
+                />
+              </View>
+            </View>
+
+            {/* Clã */}
+            <View className="flex-1 bg-black/80 backdrop-blur-sm rounded-xl p-3 border border-zinc-800/50">
+              <View className="flex-row items-center justify-between mb-1">
+                <Text className="text-neutral-400 text-xs">Clã</Text>
+                <Text className="text-red-500 text-xs">組</Text>
+              </View>
+              <Text className="text-white text-base font-bold" numberOfLines={1}>
+                {profile.clans?.name || 'Sem Clã'}
+              </Text>
+              <Text className="text-neutral-500 text-xs mt-1">
+                {profile.clans?.name ? 'Membro' : 'Independente'}
+              </Text>
+            </View>
+
+            {/* Territórios */}
+            <View className="flex-1 bg-black/80 backdrop-blur-sm rounded-xl p-3 border border-zinc-800/50">
+              <View className="flex-row items-center justify-between mb-1">
+                <Text className="text-neutral-400 text-xs">Território</Text>
+                <Text className="text-red-500 text-xs">地</Text>
+              </View>
+              <Text className="text-white text-lg font-bold">
+                {profile.level_name_jp || '0'}
+              </Text>
+              <Text className="text-neutral-500 text-xs mt-1">
+                Principal
+              </Text>
+            </View>
           </View>
         </View>
+
+         <View className="absolute top-0 inset-0 bg-black/20" />
+         
+         <View className="absolute bottom-0 inset-0 bg-black/95" />
       </View>
 
-      {/* CONTEÚDO PRINCIPAL */}
-      <View className="px-6 pt-8">
+      {/* CONTEÚDO PRINCIPAL - com padding-top negativo para sobrepor sutilmente */}
+      <View className="px-6 -mt-8 relative z-10">
 
         {/* Boas-vindas */}
-        <View className="mb-8">
+        <View className="mb-8 pt-8">
           <Text className="text-white text-3xl font-bold mb-2">
             Bem-vindo, {profile.username || 'Wakashu'}
           </Text>
           <Text className="text-neutral-400 text-base leading-6">
-            Este é o seu caminho para ascender na hierarquia. Domine os territórios,
-            complete missões e construa seu império nas sombras de Tóquio.
+            Este é o seu caminho para ascender na hierarquia. Entre em um clã,
+            complete missoes e construa seu império nas sombras do submundo.
           </Text>
         </View>
 
@@ -104,31 +189,11 @@ export default function HomeScreen() {
           </View>
 
           <Text className="text-neutral-300 text-base leading-7 mb-4">
-            O yakuza segue uma estrutura rígida de respeito e lealdade.
+            O submundo segue uma estrutura rígida de respeito e lealdade.
             Seu rank atual é <Text className="text-red-500 font-bold">{profile.rank_jp || '若衆'} ({profile.rank || 'Wakashu'})</Text>,
             o primeiro passo na jornada. Acumule <Text className="text-white font-semibold">pontos de lealdade</Text> para
             subir para Kyodai e eventualmente tornar-se um Oyabun.
           </Text>
-        </View>
-
-        {/* Seção: Código Jin-Gi */}
-        <View className="mb-8">
-          <View className="flex-row items-center mb-4">
-            <Text className="text-red-500 text-lg font-bold">仁義</Text>
-            <View className="flex-1 h-px bg-neutral-800 ml-3" />
-          </View>
-
-          <Text className="text-neutral-300 text-base leading-7 mb-3">
-            Jin-Gi representa os princípios fundamentais do yakuza: humanidade e justiça.
-            Estes valores guiam cada decisão e ação dentro da organização.
-          </Text>
-
-          <View className="bg-red-950/20 border-l-4 border-red-600 p-4 rounded-r-lg">
-            <Text className="text-neutral-400 text-sm italic leading-6">
-              &quot Lealdade acima de tudo. O código é absoluto. Traição é paga com sangue.
-              A honra do clã está acima da vida individual. &quot
-            </Text>
-          </View>
         </View>
 
         {/* Seção: Operações */}
@@ -145,7 +210,7 @@ export default function HomeScreen() {
 
           <Link href="/profile" asChild>
             <Pressable className="active:opacity-70">
-              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
+              <View className="flex-row items-center justify-between bg-black p-4 rounded-lg border border-neutral-800 mb-3">
                 <View className="flex-row items-center gap-3">
                   <Text className="text-white font-semibold text-base">Ver Perfil</Text>
                 </View>
@@ -156,7 +221,7 @@ export default function HomeScreen() {
 
           <Link href="/explore" asChild>
             <Pressable className="active:opacity-70">
-              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
+              <View className="flex-row items-center justify-between bg-black p-4 rounded-lg border border-neutral-800 mb-3">
                 <View className="flex-row items-center gap-3">
                   <Text className="text-white font-semibold text-base">Explorar Territórios</Text>
                 </View>
@@ -167,7 +232,7 @@ export default function HomeScreen() {
 
           <Link href="/clan" asChild>
             <Pressable className="active:opacity-70">
-              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
+              <View className="flex-row items-center justify-between bg-black p-4 rounded-lg border border-neutral-800 mb-3">
                 <View className="flex-row items-center gap-3">
                   <Text className="text-white font-semibold text-base">Gerenciar Clã</Text>
                 </View>
@@ -175,66 +240,15 @@ export default function HomeScreen() {
               </View>
             </Pressable>
           </Link>
-
-          <Link href="/market" asChild>
-            <Pressable className="active:opacity-70">
-              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-white font-semibold text-base">Mercado Negro</Text>
-                </View>
-                <Text className="text-red-500">→</Text>
-              </View>
-            </Pressable>
-          </Link>
-
-          <Link href="/missions" asChild>
-            <Pressable className="active:opacity-70">
-              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800 mb-3">
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-white font-semibold text-base">Missões</Text>
-                </View>
-                <Text className="text-red-500">→</Text>
-              </View>
-            </Pressable>
-          </Link>
-
-          <Link href="/dojo" asChild>
-            <Pressable className="active:opacity-70">
-              <View className="flex-row items-center justify-between bg-zinc-950 p-4 rounded-lg border border-neutral-800">
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-white font-semibold text-base">Dojo</Text>
-                </View>
-                <Text className="text-red-500">→</Text>
-              </View>
-            </Pressable>
-          </Link>
-        </View>
-
-        {/* Seção: Tatuagens e Tradição */}
-        <View className="mb-8">
-          <View className="flex-row items-center mb-4">
-            <Text className="text-red-500 text-lg font-bold">刺青</Text>
-            <View className="flex-1 h-px bg-neutral-800 ml-3" />
-          </View>
-
-          <Text className="text-neutral-300 text-base leading-7">
-            As irezumi (tatuagens tradicionais) são símbolos de comprometimento e coragem.
-            Cobrem o corpo inteiro, exceto mãos, pés e rosto, permitindo que membros
-            mantenham aparência respeitável em público. Cada desenho conta uma história
-            de lealdade e sacrifício.
-          </Text>
         </View>
 
         <CustomButton
           title="Sair da Conta"
           onPress={handleLogout}
           isLoading={loggingOut}
-          className="h-14 bg-red-600 rounded-sm active:bg-red-700 shadow-lg shadow-red-600/40 w-full"
+          className="h-14 bg-red-600 rounded-sm p-3 active:bg-red-700 shadow-lg shadow-red-600/40 w-full"
           textClassName="text-lg font-bold text-white tracking-wide"
-          
         />
-
-
 
         {/* Footer com símbolo */}
         <View className="items-center py-10 mb-6">
@@ -244,10 +258,10 @@ export default function HomeScreen() {
             <View className="w-12 h-px bg-neutral-800" />
           </View>
           <Text className="text-neutral-700 text-xs tracking-[0.25em] mb-1">
-            TOKYO UNDERGROUND
+            WELCOME TO THE UNDERWORLD
           </Text>
           <Text className="text-neutral-800 text-xs">
-            1945
+            2025
           </Text>
         </View>
 
