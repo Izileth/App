@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { AppBottomSheet } from '@/components/ui/bottom-sheet';
 import { CustomButton } from '@/components/ui/custom-button';
 import ClanEmblemEditor from '@/app/components/clan/ClanEmblemEditor';
-
+import Toast from 'react-native-toast-message';
 type EditClanEmblemSheetProps = {
   onSave: (emblem: string[]) => void;
 };
@@ -23,6 +23,7 @@ export const EditClanEmblemSheet = forwardRef(({ onSave }: EditClanEmblemSheetPr
   const handleSave = () => {
     onSave(emblem);
     sheetRef.current?.dismiss();
+    Toast.show({ type: "success", text1: "Sucesso", text2: "Emblema do clã salvo.", position: "top", visibilityTime: 3000 });
   };
 
   return (

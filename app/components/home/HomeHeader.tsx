@@ -31,14 +31,18 @@ export function HomeHeader({ profile }: HomeHeaderProps) {
           {/* Avatar com borda animada */}
           <View className="relative">
             <View className="absolute -inset-1 bg-gradient-to-br from-red-600 via-red-500 to-orange-600 rounded-full blur-sm" />
-            <Image
-              source={{
-                uri:
-                  profile.avatar_url ||
-                  `https://placehold.co/200x200/000000/FFF?text=${profile.username?.charAt(0)}`,
-              }}
-              className="w-28 h-28 rounded-full border-4 border-black relative"
-            />
+
+            {profile.avatar_url ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                className="w-28 h-28 rounded-full border-4 border-black relative"
+              />
+            ) : (
+              <View className="w-28 h-28 rounded-full border-4 border-black relative bg-black flex items-center justify-center">
+                <Text className="text-5xl">🐲</Text>
+              </View>
+            )}
+
             {/* Badge de nível */}
             <View className="absolute -bottom-2 -right-2 bg-red-600 rounded-full px-3 py-1 border-2 border-black">
               <Text className="text-white text-xs font-bold">Lv {profile.level || 1}</Text>

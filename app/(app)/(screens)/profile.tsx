@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { ScrollView, Text, View, Alert } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useAuth } from '@/app/context/auth-context';
 import { useProfile } from "@/app/context/profile-context";
 import { ClanManagementModal } from '@/components/clan-management';
@@ -12,7 +12,7 @@ import { KanjiLoader } from "@/components/ui/kanji-loader";
 import { EditJapaneseNameSheet } from "@/app/components/profile/EditJapaneseNameSheet";
 import { EditClanEmblemSheet } from "@/app/components/profile/EditClanEmblemSheet";
 import { supabase } from "@/app/lib/supabase";
-
+import Toast from "react-native-toast-message";
 export default function ProfileScreen() {
   const { logout } = useAuth();
   // Data now comes from the single source of truth: ProfileContext
@@ -45,7 +45,13 @@ export default function ProfileScreen() {
       await updateProfile({ username_jp: name });
       editJapaneseNameSheetRef.current?.dismiss();
     } catch (e: any) {
-      Alert.alert('Erro', 'Não foi possível atualizar o nome japonês.');
+      Toast.show({
+        type: "error",
+        text1: "Erro",
+        text2: "Não foi possível atualizar o nome japonês.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       console.error('Error updating japanese name:', e);
     }
   };
@@ -61,7 +67,13 @@ export default function ProfileScreen() {
       if (error) throw error;
       await refetchProfile(); // Use refetchProfile from context
     } catch (error: any) {
-      Alert.alert('Erro', 'Não foi possível atualizar o emblema do clã.');
+      Toast.show({
+        type: "error",
+        text1: "Erro",
+        text2: "Não foi possível atualizar o emblema do clã.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       console.error('Error updating clan emblem:', error);
     }
   };

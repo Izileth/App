@@ -1,6 +1,7 @@
 import { Slot, useSegments, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
+import { ProfileProvider } from "./context/profile-context";
 import { AuthProvider, useAuth } from "./context/auth-context";
 import LoadingScreen from "./_loading";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -73,8 +74,6 @@ const RootLayoutNav = () => {
     </View>
   );
 };
-
-import { ProfileProvider } from "./context/profile-context";
 
 export default function RootLayout() {
   return (

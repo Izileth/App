@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { useProfile } from "@/app/context/profile-context";
 import { useClanAssets } from "@/app/hooks/useClanAssets";
 import { useClanMembers } from "@/app/hooks/useClanMembers";
-import { Territory, Mission, ClanEvent } from "@/app/lib/types";
+import { Territory, Mission } from "@/app/lib/types";
 
 import { GenericTabs, Tab } from "@/components/ui/GenericTabs";
 import { AddTerritorySheet } from "@/app/components/clan/AddTerritorySheet";
@@ -177,7 +177,7 @@ export default function ClanScreen() {
               <View className="w-12 h-px bg-neutral-800" />
             </View>
             <Text className="text-neutral-700 text-xs tracking-[0.25em]">
-              FAMILY FIRST
+            WELCOME TO THE UNDERWORLD
             </Text>
           </View>
         </View>

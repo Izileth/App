@@ -34,11 +34,11 @@ export function EventsTab({ events, loading }: EventsTabProps) {
   return (
     <View className="mb-8">
       <View className="flex-row items-center mb-4">
-        <Text className="text-blue-500 text-base font-bold">イベント</Text>
+        <Text className="text-red-500 text-base font-bold">イベント</Text>
         <View className="flex-1 h-px bg-neutral-800 ml-3" />
       </View>
 
-      <View className="bg-blue-950/20 border-l-4 border-blue-600 p-4 rounded-r-lg mb-5">
+      <View className="bg-red-950/20 border-l-4 border-red-600 p-4 rounded-r-lg mb-5">
         <Text className="text-neutral-400 text-xs leading-5">
           Acontecimentos recentes e marcos importantes para o clã.
         </Text>

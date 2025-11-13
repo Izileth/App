@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, User } from "lucide-react-native";
+import { Video, ResizeMode } from 'expo-av';
 import { useAuth } from "../../context/auth-context";
 import { CustomButton } from "../../../components/ui/custom-button";
 
@@ -12,11 +13,10 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleLogin = async () => {
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
     if (!email || !password) {
       setErrorMessage("Por favor, preencha todos os campos.");
       return;
@@ -24,7 +24,6 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signIn(email, password);
-      // The router replacement is handled by the AuthProvider's useProtectedRoute hook
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message);
@@ -38,9 +37,25 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-black">
-      {/* Gradient Effects */}
-      <View className="absolute -top-24 -right-24 w-72 h-72 bg-red-600 opacity-10 rounded-full" />
-      <View className="absolute -bottom-36 -left-36 w-96 h-96 bg-orange-900 opacity-5 rounded-full" />
+      {/* Video Background */}
+      <Video
+        source={require('@/assets/videos/background.mp4')} // Ajuste o caminho
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+        }}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        isLooping
+        isMuted
+        rate={1.0}
+      />
+      
+      {/* Overlay escuro para melhorar legibilidade */}
+      <View className="absolute inset-0 bg-black/70" />
       
       <View className="flex-1 justify-center items-center px-8">
         {/* Logo */}
@@ -56,7 +71,7 @@ export default function LoginScreen() {
         {/* Form */}
         <View className="w-full max-w-md">
           {/* Email */}
-          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+          <View className="flex-row items-center w-full h-14 bg-neutral-950/80 backdrop-blur rounded-xl px-4 mb-4 border border-neutral-900">
             <User size={20} color="#666666" strokeWidth={2} />
             <TextInput
               placeholder="E-mail"
@@ -70,7 +85,7 @@ export default function LoginScreen() {
           </View>
 
           {/* Password */}
-          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+          <View className="flex-row items-center w-full h-14 bg-neutral-950/80 backdrop-blur rounded-xl px-4 mb-4 border border-neutral-900">
             <Lock size={20} color="#666666" strokeWidth={2} />
             <TextInput
               placeholder="Senha"
@@ -123,11 +138,11 @@ export default function LoginScreen() {
           </View>
         </View>
 
-          {/* Footer */}
-          <Text className="absolute bottom-8 text-neutral-700 text-xs italic">
-            Protegido pela honra do clã
-          </Text>
-        </View>
+        {/* Footer */}
+        <Text className="absolute bottom-8 text-neutral-700 text-xs italic">
+          Protegido pela honra do clã
+        </Text>
       </View>
-    );
-  }
+    </View>
+  );
+}

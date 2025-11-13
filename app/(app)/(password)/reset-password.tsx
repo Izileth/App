@@ -2,6 +2,7 @@ import { View, Text, TextInput, Pressable, Alert } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Lock, Eye, EyeOff } from "lucide-react-native";
+import { Video, ResizeMode } from 'expo-av';
 import { supabase } from "../../lib/supabase";
 import { CustomButton } from "../../../components/ui/custom-button";
 
@@ -12,11 +13,10 @@ export default function ResetPasswordScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleResetPassword = async () => {
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
 
     if (!password || !confirmPassword) {
       setErrorMessage("Por favor, preencha todos os campos.");
@@ -60,9 +60,25 @@ export default function ResetPasswordScreen() {
 
   return (
     <View className="flex-1 bg-black">
-      {/* Gradient Effects */}
-      <View className="absolute -top-24 -right-24 w-72 h-72 bg-red-600 opacity-10 rounded-full" />
-      <View className="absolute -bottom-36 -left-36 w-96 h-96 bg-orange-900 opacity-5 rounded-full" />
+      {/* Video Background */}
+      <Video
+        source={require('@/assets/videos/background.mp4')} // Ajuste o caminho
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+        }}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        isLooping
+        isMuted
+        rate={1.0}
+      />
+
+      {/* Overlay escuro */}
+      <View className="absolute inset-0 bg-black/70" />
 
       <View className="flex-1 justify-center items-center px-8">
         {/* Logo */}
@@ -80,7 +96,7 @@ export default function ResetPasswordScreen() {
           <Text className="text-neutral-400 text-center mb-8">Crie uma nova senha para sua conta.</Text>
 
           {/* Password */}
-          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+          <View className="flex-row items-center w-full h-14 bg-neutral-950/80 backdrop-blur rounded-xl px-4 mb-4 border border-neutral-900">
             <Lock size={20} color="#666666" strokeWidth={2} />
             <TextInput
               placeholder="Nova Senha"
@@ -100,7 +116,7 @@ export default function ResetPasswordScreen() {
           </View>
 
           {/* Confirm Password */}
-          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+          <View className="flex-row items-center w-full h-14 bg-neutral-950/80 backdrop-blur rounded-xl px-4 mb-4 border border-neutral-900">
             <Lock size={20} color="#666666" strokeWidth={2} />
             <TextInput
               placeholder="Confirmar Nova Senha"

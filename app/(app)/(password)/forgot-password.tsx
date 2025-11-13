@@ -2,6 +2,7 @@ import { View, Text, TextInput, Pressable, Alert } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Mail } from "lucide-react-native";
+import { Video, ResizeMode } from 'expo-av';
 import { supabase } from "../../lib/supabase";
 import { CustomButton } from "../../../components/ui/custom-button";
 
@@ -9,7 +10,6 @@ export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -57,10 +57,26 @@ export default function ForgotPasswordScreen() {
 
   return (
     <View className="flex-1 bg-black">
-      {/* Gradient Effects */}
-      <View className="absolute -top-24 -right-24 w-72 h-72 bg-red-600 opacity-10 rounded-full" />
-      <View className="absolute -bottom-36 -left-36 w-96 h-96 bg-orange-900 opacity-5 rounded-full" />
-      
+      {/* Video Background */}
+      <Video
+        source={require('@/assets/videos/background.mp4')} // Ajuste o caminho
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+        }}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        isLooping
+        isMuted
+        rate={1.0}
+      />
+
+      {/* Overlay escuro */}
+      <View className="absolute inset-0 bg-black/70" />
+
       <View className="flex-1 justify-center items-center px-8">
         {/* Logo */}
         <View className="items-center mb-12">
@@ -77,7 +93,7 @@ export default function ForgotPasswordScreen() {
           <Text className="text-neutral-400 text-center mb-8">Digite seu e-mail para receber um link de redefinição.</Text>
 
           {/* Email */}
-          <View className="flex-row items-center w-full h-14 bg-neutral-950 rounded-xl px-4 mb-4 border border-neutral-900">
+          <View className="flex-row items-center w-full h-14 bg-neutral-950/80 backdrop-blur rounded-xl px-4 mb-4 border border-neutral-900">
             <Mail size={20} color="#666666" strokeWidth={2} />
             <TextInput
               placeholder="Email"

@@ -3,11 +3,11 @@ import { View, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 
+
 interface ToastProps {
-  text1: string;
+  text1?: string;
   text2?: string;
 }
-
 export const toastConfig = {
   success: (props: ToastProps) => (
     <View className="w-[90%] mt-12 bg-black  border-l border-white p-5 flex-row items-start shadow-2xl">

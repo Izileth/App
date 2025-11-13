@@ -33,7 +33,7 @@ export function MembersTab({ members, loading }: MembersTabProps) {
       </View>
 
       {members.map((member) => (
-        <Link key={member.id} href={`/(app)/(public)/${member.slug}`} asChild>
+        <Link key={member.id} href={`/${member.slug}`} asChild>
           <View
             className="bg-black border border-zinc-900 rounded-lg p-4 mb-3 active:opacity-70"
           >

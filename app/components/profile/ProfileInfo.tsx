@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import type { Profile } from '@/app/lib/types';
 import { formatDate } from '@/app/utils/formatDate';
+import { ProfileSocialLinks } from './ProfileSocialLinks';
 type ProfileInfoProps = {
   profile: Profile;
   isOwner: boolean;
@@ -115,6 +116,11 @@ export function ProfileInfo({
           </Pressable>
         )}
       </View>
+
+      <ProfileSocialLinks
+        profile={profile}
+        isOwner={isOwner}
+      />
 
       {/* Member Since Card */}
       <View className="bg-black rounded-xl p-4 mb-4">

@@ -24,22 +24,6 @@ const SocialLinks = ({ profile }: ProfileHeaderProps) => (
         <FontAwesome name="twitter" size={24} color="#9ca3af" />
       </Pressable>
     )}
-
-    {profile.twitter_handle && (
-      <Pressable onPress={() => Linking.openURL(profile.twitter_handle!)}>
-        <FontAwesome name="twitter" size={24} color="#9ca3af" />
-      </Pressable>
-    )}
-    {profile.github_handle && (
-      <Pressable onPress={() => Linking.openURL(profile.github_handle!)}>
-        <FontAwesome name="github" size={24} color="#9ca3af" />
-      </Pressable>
-    )}
-    {profile.website_url && (
-      <Pressable onPress={() => Linking.openURL(profile.website_url!)}>
-        <FontAwesome name="globe" size={24} color="#9ca3af" />
-      </Pressable>
-    )}
     
   </View>
 );

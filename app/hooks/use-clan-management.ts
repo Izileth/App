@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/auth-context';
 import { Clan, Profile } from '../lib/types';
 import * as ImagePicker from 'expo-image-picker';
+import Toast from 'react-native-toast-message';
 
 export type ClanManagementView = 'main' | 'join' | 'create' | 'manage' | 'edit' | 'edit-emblem';
 
@@ -40,7 +41,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
       .from('clans')
       .select('*, profiles(username)')
       .order('name');
-    if (error) Alert.alert('Erro', 'Não foi possível carregar a lista de clãs.');
+    if (error) Toast.show({ type: "error", text1: "Erro", text2: "Falha ao carregar clã.", position: "top", visibilityTime: 3000 });
     else if (data) setClans(data as any);
     setLoading(false);
   };
@@ -82,7 +83,8 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
       const { data: { publicUrl } } = supabase.storage.from('assets').getPublicUrl(data.path);
       return publicUrl;
     } catch (e: any) {
-      Alert.alert('Erro ao fazer upload da imagem', e.message);
+      console.error('Error uploading image:', e.message);
+      Toast.show({ type: "error", text1: "Erro", text2: "Erro ao fazer upload da imagem.", position: "top", visibilityTime: 3000 });
       return null;
     }
   };
@@ -90,7 +92,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
   const handlePickImage = async (type: 'avatar' | 'banner') => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'É necessário permitir o acesso à galeria.');
+      Toast.show({ type: "error", text1: "Permissão necessária", text2: "É necessário permitir o acesso à galeria.", position: "top", visibilityTime: 3000 });
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -110,9 +112,9 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
     if (!user) return;
     setLoading(true);
     const { error } = await supabase.from('profiles').update({ clan_id: clanId }).eq('id', user.id);
-    if (error) Alert.alert('Erro', 'Não foi possível entrar no clã.');
+    if (error) Toast.show({ type: "error", text1: "Erro", text2: "Não foi possível entrar no clã.", position: "top", visibilityTime: 3000 });
     else {
-      Alert.alert('Sucesso', 'Você entrou no clã!');
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Entrou no clã.", position: "top", visibilityTime: 3000 });
       refetchProfile();
       onDismiss();
     }
@@ -121,7 +123,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
 
   const handleCreateClan = async () => {
     if (!user || !name.trim()) {
-      Alert.alert('Erro', 'O nome do clã é obrigatório.');
+      Toast.show({ type: "error", text1: "Erro", text2: "O nome do clã é obrigatório.", position: "top", visibilityTime: 3000 });
       return;
     }
     setLoading(true);
@@ -156,14 +158,15 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
       const { error: joinError } = await supabase.from('profiles').update({ clan_id: newClan.id }).eq('id', user.id);
       if (joinError) throw joinError;
 
-      Alert.alert('Sucesso', 'Clã criado e você entrou nele!');
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Clã criado e você entrou nele!", position: "top", visibilityTime: 3000 });
       refetchProfile();
       onDismiss();
     } catch (e: any) {
       if (e.code === '23505') { // Unique constraint violation
-        Alert.alert('Erro', 'Este nome de clã já está em uso. Por favor, escolha outro.');
+        Toast.show({ type: "error", text1: "Erro", text2: "Este nome de clã já está em uso. Por favor, escolha outro.", position: "top", visibilityTime: 3000 });
       } else {
-        Alert.alert('Erro ao criar clã', e.message);
+        console.error('Error creating clan:', e);
+        Toast.show({ type: "error", text1: "Erro", text2: "Não foi possível criar o clã.", position: "top", visibilityTime: 3000 });
       }
     } finally {
       setLoading(false);
@@ -172,6 +175,8 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
 
   const handleLeaveClan = async () => {
     if (!user) return;
+
+    Toast.show({ type: "info", text1: "Confirmação", text2: "Tem certeza que deseja sair do seu clã atual?", position: "top", visibilityTime: 3000 });
     Alert.alert(
       "Sair do Clã",
       "Tem certeza que deseja sair do seu clã atual?",
@@ -184,9 +189,9 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
             setLoading(true);
             const { error } = await supabase.from('profiles').update({ clan_id: null }).eq('id', user.id);
             if (error) {
-              Alert.alert('Erro', 'Não foi possível sair do clã.');
+              Toast.show({ type: "error", text1: "Erro", text2: "Não foi possível sair do clã.", position: "top", visibilityTime: 3000 });
             } else {
-              Alert.alert('Sucesso', 'Você saiu do clã.');
+              Toast.show({ type: "success", text1: "Sucesso", text2: "Você saiu do clã.", position: "top", visibilityTime: 3000 });
               refetchProfile();
               onDismiss();
             }
@@ -200,7 +205,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
   const handleUpdateClan = async () => {
     if (!user || !profile?.clans) return;
     if (!name.trim()) {
-      Alert.alert('Erro', 'O nome do clã é obrigatório.');
+      Toast.show({ type: "error", text1: "Erro", text2: "O nome do clã é obrigatório.", position: "top", visibilityTime: 3000 });
       return;
     }
     setLoading(true);
@@ -222,14 +227,14 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
       const { error } = await supabase.from('clans').update(updates).eq('id', profile.clans.id);
       if (error) throw error;
 
-      Alert.alert('Sucesso', 'Clã atualizado!');
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Clã atualizado!", position: "top", visibilityTime: 3000 });
       refetchProfile();
       setView('manage');
     } catch (e: any) {
       if (e.code === '23505') { // Unique constraint violation
-        Alert.alert('Erro', 'Este nome de clã já está em uso. Por favor, escolha outro.');
+        Toast.show({ type: "error", text1: "Erro", text2: "Este nome de clã já está em uso. Por favor, escolha outro.", position: "top", visibilityTime: 3000 });
       } else {
-        Alert.alert('Erro ao atualizar clã', e.message);
+        Toast.show({ type: "error", text1: "Erro", text2: "Não foi possível atualizar o clã.", position: "top", visibilityTime: 3000 });
       }
     } finally {
       setLoading(false);
@@ -238,6 +243,7 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
 
   const handleDeleteClan = async () => {
     if (!user || !profile?.clans) return;
+    Toast.show({ type: "info", text1: "Confirmação", text2: "Isso é permanente e irá remover todos os membros do clã. Tem certeza?", position: "top", visibilityTime: 3000 });
     Alert.alert(
       "Excluir Clã",
       "Isso é permanente e irá remover todos os membros do clã. Tem certeza?",
@@ -250,9 +256,9 @@ export const useClanManagement = (profile: Profile | null | undefined, refetchPr
             setLoading(true);
             const { error } = await supabase.from('clans').delete().eq('id', profile.clans!.id);
             if (error) {
-              Alert.alert('Erro', 'Não foi possível excluir o clã.');
+              Toast.show({ type: "error", text1: "Erro", text2: "Não foi possível excluir o clã.", position: "top", visibilityTime: 3000 });
             } else {
-              Alert.alert('Sucesso', 'Clã excluído.');
+              Toast.show({ type: "success", text1: "Sucesso", text2: "Clã excluído.", position: "top", visibilityTime: 3000 });
               refetchProfile();
               onDismiss();
             }

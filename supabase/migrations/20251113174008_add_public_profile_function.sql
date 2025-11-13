@@ -71,26 +71,12 @@ BEGIN
     p.level_name_jp,
     p.joined_date,
     p.username_jp,
-    (
-      SELECT json_build_object(
-        'id', c.id,
-        'name', c.name,
-        'description', c.description,
-        'owner_id', c.owner_id,
-        'created_at', c.created_at,
-        'banner_url', c.banner_url,
-        'avatar_url', c.avatar_url,
-        'tag', c.tag,
-        'emblem', c.emblem,
-        'power', c.power,
-        'reputation', c.reputation
-      )
-      FROM clans c
-      WHERE c.id = p.clan_id
-    ) as clans
+    to_json(c)
   FROM
     profiles p
+  LEFT JOIN
+    clans c ON p.clan_id = c.id
   WHERE
     p.slug = p_slug;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

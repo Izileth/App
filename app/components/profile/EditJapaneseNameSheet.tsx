@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { AppBottomSheet } from '@/components/ui/bottom-sheet';
 import KanjiDictionary from '@/components/ui/KanjiDictionary';
 import { CustomButton } from '@/components/ui/custom-button';
-
+import Toast from 'react-native-toast-message';
 type EditJapaneseNameSheetProps = {
   initialName: string;
   onSave: (name: string) => void;
@@ -29,11 +29,13 @@ export const EditJapaneseNameSheet = forwardRef(({ initialName, onSave }: EditJa
 
   const clearJapaneseName = () => {
     setJapaneseName('');
+    Toast.show({ type: "success", text1: "Sucesso", text2: "Nome japonês limpo.", position: "top", visibilityTime: 3000 });
   };
 
   const handleSave = () => {
     onSave(japaneseName);
     sheetRef.current?.dismiss();
+    Toast.show({ type: "success", text1: "Sucesso", text2: "Nome japonês salvo.", position: "top", visibilityTime: 3000 });
   };
 
   return (
