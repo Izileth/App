@@ -77,7 +77,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <SocialLinks profile={profile} />
       </View>
 
-      <View className="absolute bottom-0 inset-0 bg-black/80" />
+      <View className="absolute bottom-0 inset-0 bg-black/30" />
       <View className="absolute left-0 top-40 w-1 h-32 bg-red-600" />
       <View className="absolute right-0 top-40 w-1 h-32 bg-red-600" />
     </View>

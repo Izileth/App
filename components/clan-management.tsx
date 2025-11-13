@@ -7,7 +7,7 @@ import { Profile } from '../app/lib/types';
 import { CustomButton } from './ui/custom-button';
 import { KanjiLoader } from './ui/kanji-loader';
 import ClanEmblemEditor from '@/app/components/clan/ClanEmblemEditor';
-
+import { LinearGradient } from 'expo-linear-gradient';
 // Separate FormFields component to prevent re-renders
 type FormFieldsProps = {
   name: string;
@@ -181,36 +181,89 @@ export const ClanManagementModal = forwardRef<any, Props>(({ profile, refetchPro
         if (!profile.clans) return null;
         return (
           <View style={styles.manageView}>
-            {profile.clans.banner_url && <Image source={{ uri: profile.clans.banner_url }} style={styles.manageBanner} />}
+            {/* Container do banner com degradê */}
+            <View style={{ position: 'relative', height: 200 }}>
+              {profile.clans.banner_url &&
+                <Image
+                  source={{ uri: profile.clans.banner_url }}
+                  style={[styles.manageBanner, { position: 'absolute', width: '100%', height: '100%' }]}
+                />
+              }
+              {/* Degradê que vai do transparente ao preto */}
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,1)', '#000000']}
+                locations={[0, 0.4, 0.7, 1]}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: '100%'
+                }}
+              />
+            </View>
+
+            {/* Conteúdo sobre fundo escuro */}
             <View style={styles.manageHeader}>
               {profile.clans.avatar_url ?
                 <Image source={{ uri: profile.clans.avatar_url }} style={styles.manageAvatar} /> :
-                <View style={styles.manageAvatar}><Text style={{ fontSize: 40 }}>{profile.clans.emblem || '氏'}</Text></View>
+                <View style={styles.manageAvatar}>
+                  <Text style={{ fontSize: 40 }}>{profile.clans.emblem || '氏'}</Text>
+                </View>
               }
-              <Text style={styles.clanTitle}>{profile.clans.name} {profile.clans.tag ? `[${profile.clans.tag}]` : ''}</Text>
+              <Text style={styles.clanTitle}>
+                {profile.clans.name} {profile.clans.tag ? `[${profile.clans.tag}]` : ''}
+              </Text>
               {profile.clans.profiles?.username && (
                 <View style={styles.ownerInfo}>
-                  <Text style={styles.ownerName}>Criado por {profile.clans.profiles.username}</Text>
-                  {isOwner && <FontAwesome name="star" size={14} color="#facc15" style={{ marginLeft: 5 }} />}
+                  <Text style={styles.ownerName}>
+                    Criado por {profile.clans.profiles.username}
+                  </Text>
+                  {isOwner && (
+                    <FontAwesome
+                      name="star"
+                      size={14}
+                      color="#facc15"
+                      style={{ marginLeft: 5 }}
+                    />
+                  )}
                 </View>
               )}
             </View>
-            {profile.clans.description && <Text style={styles.clanManageDescription}>{profile.clans.description}</Text>}
+
+            {profile.clans.description && (
+              <Text style={styles.clanManageDescription}>
+                {profile.clans.description}
+              </Text>
+            )}
+
             <View style={styles.separator} />
+
             {isOwner && (
-              <Pressable style={styles.menuButton} onPress={() => handleSetView('edit', 'Editar Clã', '氏族を編集')}>
+              <Pressable
+                style={styles.menuButton}
+                onPress={() => handleSetView('edit', 'Editar Clã', '氏族を編集')}
+              >
                 <FontAwesome name="pencil" size={20} color="#f87171" />
                 <Text style={styles.menuButtonText}>Editar Clã</Text>
               </Pressable>
             )}
+
             <Pressable style={styles.menuButton} onPress={handleLeaveClan}>
               <FontAwesome name="sign-out" size={20} color="#f87171" />
               <Text style={styles.menuButtonText}>Sair do Clã</Text>
             </Pressable>
+
             {isOwner && (
-              <Pressable style={[styles.menuButton, { marginTop: 20 }]} onPress={handleDeleteClan}>
+              <Pressable
+                style={[styles.menuButton, { marginTop: 20 }]}
+                onPress={handleDeleteClan}
+              >
                 <FontAwesome name="trash" size={20} color="#ef4444" />
-                <Text style={[styles.menuButtonText, { color: '#ef4444' }]}>Excluir Clã</Text>
+                <Text style={[styles.menuButtonText, { color: '#ef4444' }]}>
+                  Excluir Clã
+                </Text>
               </Pressable>
             )}
           </View>
@@ -302,8 +355,8 @@ const styles = StyleSheet.create({
   joinButton: { backgroundColor: '#DC2626', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8, marginLeft: 10 },
   joinButtonText: { color: 'white', fontWeight: 'bold' },
   manageView: { paddingTop: 0 },
-  manageBanner: { width: '110%', height: 120, position: 'absolute', top: -20, left: -20, right: -20 },
-  manageHeader: { alignItems: 'center', marginTop: 60 },
+  manageBanner: { width: '110%', height: 200, position: 'absolute', top: -20, left: -20, right: -20 },
+  manageHeader: { width: '100%', alignItems: 'center', marginTop: -120 },
   manageAvatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#ccc', borderWidth: 3, borderColor: '#DC2626', justifyContent: 'center', alignItems: 'center', color: 'white' },
   clanTitle: { color: 'white', fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginTop: 10 },
   clanManageDescription: { color: '#a1a1aa', fontSize: 16, textAlign: 'center', marginTop: 8, paddingHorizontal: 20 },

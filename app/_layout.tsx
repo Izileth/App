@@ -5,6 +5,8 @@ import { AuthProvider, useAuth } from "./context/auth-context";
 import LoadingScreen from "./_loading";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/components/ui/toast-config';
 import '@/global.css';
 
 const RootLayoutNav = () => {
@@ -67,6 +69,7 @@ const RootLayoutNav = () => {
           <LoadingScreen onAnimationEnd={() => setSplashAnimationFinished(true)} />
         </Animated.View>
       )}
+      <Toast config={toastConfig} />
     </View>
   );
 };

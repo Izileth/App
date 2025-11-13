@@ -7,7 +7,7 @@ import { EditJapaneseNameSheet } from './EditJapaneseNameSheet';
 import { useProfile } from '@/app/context/profile-context';
 import { useAuth } from '@/app/context/auth-context';
 import type { Profile } from '@/app/lib/types';
-
+import Toast from 'react-native-toast-message';
 type EditProfileSheetProps = {};
 
 const formatJapaneseName = (name: string | string[] | null | undefined): string => {
@@ -143,8 +143,10 @@ export const EditProfileSheet = memo(forwardRef<any, EditProfileSheetProps>((pro
       };
 
       await updateProfile(updates);
-
-      Alert.alert('Sucesso', 'Perfil atualizado!');
+      Toast.show({
+        type: 'success',
+        text1: 'Perfil atualizado com sucesso!'
+      })
       if (typeof (ref as any)?.current?.dismiss === 'function') {
         (ref as any).current.dismiss();
       }
