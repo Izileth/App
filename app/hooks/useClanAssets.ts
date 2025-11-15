@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Territory, Mission, ClanEvent } from '../lib/types';
 import { useAuth } from '../context/auth-context';
-
+import Toast from 'react-native-toast-message';
 
 export const useClanAssets = (clanId: string | undefined) => {
   const { user } = useAuth();
@@ -86,6 +86,7 @@ export const useClanAssets = (clanId: string | undefined) => {
         description: `Um novo território, ${name}, foi estabelecido.`,
         metadata: { territory_id: data.id }
       });
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Território criado.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };
@@ -96,18 +97,19 @@ export const useClanAssets = (clanId: string | undefined) => {
       .from('territories')
       .update({ clan_id: clanId })
       .eq('id', territoryId)
-      .select()
-      .single();
+      .select();
     
     if (error) {
       console.error('Error annexing territory:', error);
-    } else if (data) {
+    } else if (data && data.length > 0) {
+      const annexedTerritory = data[0];
       await supabase.from('clan_events').insert({
         clan_id: clanId,
         event_type: 'territory_annexed',
-        description: `O território ${data.name} foi anexado.`,
-        metadata: { territory_id: data.id }
+        description: `O território ${annexedTerritory.name} foi anexado.`,
+        metadata: { territory_id: annexedTerritory.id }
       });
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Território anexado.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };
@@ -136,6 +138,7 @@ export const useClanAssets = (clanId: string | undefined) => {
         description: `Nova missão disponível: ${name}.`,
         metadata: { mission_id: newMission.id }
       });
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Missão criada.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };
@@ -150,6 +153,7 @@ export const useClanAssets = (clanId: string | undefined) => {
     if (error) {
       console.error('Error completing mission:', error);
     } else {
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Missão completada.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };
@@ -163,6 +167,7 @@ export const useClanAssets = (clanId: string | undefined) => {
     if (error) {
       console.error('Error updating territory:', error);
     } else {
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Território atualizado.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };
@@ -176,6 +181,7 @@ export const useClanAssets = (clanId: string | undefined) => {
     if (error) {
       console.error('Error abandoning territory:', error);
     } else {
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Território abandonado.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };
@@ -197,6 +203,7 @@ export const useClanAssets = (clanId: string | undefined) => {
     if (error) {
       console.error('Error updating mission:', error);
     } else {
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Missão atualizada.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };
@@ -210,6 +217,7 @@ export const useClanAssets = (clanId: string | undefined) => {
     if (error) {
       console.error('Error deleting mission:', error);
     } else {
+      Toast.show({ type: "success", text1: "Sucesso", text2: "Missão deletada.", position: "top", visibilityTime: 3000 });
       await fetchAssets();
     }
   };

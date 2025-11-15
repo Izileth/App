@@ -1,5 +1,5 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
-import { View, Text, TextInput, Pressable } from 'react-native';
+import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from 'react';
+import { View, Text, TextInput, Pressable, Animated } from 'react-native';
 import { AppBottomSheet } from '@/components/ui/bottom-sheet';
 import { CustomButton } from '@/components/ui/custom-button';
 import { Territory } from '@/app/lib/types';
@@ -22,6 +22,11 @@ export const AddTerritorySheet = forwardRef(({ onCreate, onAnnex, availableTerri
   const [isLoading, setIsLoading] = useState(false);
   const sheetRef = useRef<any>(null);
 
+  // Animated values para transições suaves
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const createOpacity = useRef(new Animated.Value(1)).current;
+  const annexOpacity = useRef(new Animated.Value(0.5)).current;
+
   useImperativeHandle(ref, () => ({
     present: () => {
       if (mode === 'annex' && availableTerritories.length > 0 && !selectedTerritoryId) {
@@ -31,6 +36,28 @@ export const AddTerritorySheet = forwardRef(({ onCreate, onAnnex, availableTerri
     },
     dismiss: () => sheetRef.current?.dismiss(),
   }));
+
+  // Animação ao trocar de modo
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(slideAnim, {
+        toValue: mode === 'create' ? 0 : 1,
+        useNativeDriver: false,
+        friction: 8,
+        tension: 80,
+      }),
+      Animated.timing(createOpacity, {
+        toValue: mode === 'create' ? 1 : 0.5,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(annexOpacity, {
+        toValue: mode === 'annex' ? 1 : 0.5,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [mode]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -54,30 +81,62 @@ export const AddTerritorySheet = forwardRef(({ onCreate, onAnnex, availableTerri
       titleJP="縄張り管理"
     >
       <View className="gap-4 pt-4">
-        {/* Mode Selector */}
-        <View className="flex-row bg-zinc-900 rounded-lg p-1 mb-4">
-          <Pressable
-            onPress={() => setMode('create')}
-            className={`flex-1 items-center py-2 rounded-md ${mode === 'create' ? 'bg-red-600' : ''}`}
-          >
-            <Text className={`font-semibold ${mode === 'create' ? 'text-white' : 'text-neutral-400'}`}>
-              Criar Novo
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setMode('annex')}
-            className={`flex-1 items-center py-2 rounded-md ${mode === 'annex' ? 'bg-red-600' : ''}`}
-          >
-            <Text className={`font-semibold ${mode === 'annex' ? 'text-white' : 'text-neutral-400'}`}>
-              Anexar Existente
-            </Text>
-          </Pressable>
+        {/* Mode Selector - Animated Tabs */}
+        <View className="bg-black border border-black rounded-lg overflow-hidden mb-4">
+          <View className="flex-row relative">
+            {/* Animated Bottom Border Indicator */}
+            <Animated.View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: slideAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '50%'],
+                }),
+                width: '50%',
+                height: 3,
+                backgroundColor: '#dc2626', // red-600
+              }}
+            />
+
+            {/* Create Tab */}
+            <Pressable
+              onPress={() => setMode('create')}
+              className="flex-1 items-center py-3 border-b border-black"
+            >
+              <Animated.Text
+                style={{ opacity: createOpacity }}
+                className={`font-semibold ${
+                  mode === 'create' ? 'text-white' : 'text-neutral-500'
+                }`}
+              >
+                Criar Novo
+              </Animated.Text>
+            </Pressable>
+
+            {/* Annex Tab */}
+            <Pressable
+              onPress={() => setMode('annex')}
+              className="flex-1 items-center py-3 border-b border-black"
+            >
+              <Animated.Text
+                style={{ opacity: annexOpacity }}
+                className={`font-semibold ${
+                  mode === 'annex' ? 'text-white' : 'text-neutral-500'
+                }`}
+              >
+                Anexar Existente
+              </Animated.Text>
+            </Pressable>
+          </View>
         </View>
 
         {mode === 'create' ? (
           <>
             <View>
-              <Text className="text-neutral-400 text-xs mb-2">NOME DO TERRITÓRIO</Text>
+              <Text className="text-neutral-400 text-xs mb-2 uppercase tracking-wider">
+                Nome do Território
+              </Text>
               <TextInput
                 value={name}
                 onChangeText={setName}
@@ -87,7 +146,9 @@ export const AddTerritorySheet = forwardRef(({ onCreate, onAnnex, availableTerri
               />
             </View>
             <View>
-              <Text className="text-neutral-400 text-xs mb-2">DESCRIÇÃO</Text>
+              <Text className="text-neutral-400 text-xs mb-2 uppercase tracking-wider">
+                Descrição
+              </Text>
               <TextInput
                 value={description}
                 onChangeText={setDescription}
@@ -110,7 +171,9 @@ export const AddTerritorySheet = forwardRef(({ onCreate, onAnnex, availableTerri
           availableTerritories.length > 0 ? (
             <>
               <View>
-                <Text className="text-neutral-400 text-xs mb-2">TERRITÓRIO DISPONÍVEL</Text>
+                <Text className="text-neutral-400 text-xs mb-2 uppercase tracking-wider">
+                  Território Disponível
+                </Text>
                 <View className="bg-black border border-zinc-900 rounded-lg">
                   <Picker
                     selectedValue={selectedTerritoryId}
@@ -134,9 +197,14 @@ export const AddTerritorySheet = forwardRef(({ onCreate, onAnnex, availableTerri
             </>
           ) : (
             <View className="items-center justify-center p-8">
-              <FontAwesome name="map-o" size={40} color="#525252" />
-              <Text className="text-neutral-500 text-center mt-3">
-                Nenhum território neutro disponível para anexar no momento.
+              <View className="bg-zinc-900 p-4 rounded-full mb-4">
+                <FontAwesome name="map-o" size={32} color="#71717a" />
+              </View>
+              <Text className="text-white font-semibold text-base mb-1">
+                Nenhum território disponível
+              </Text>
+              <Text className="text-neutral-500 text-sm text-center">
+                Não há territórios neutros para anexar no momento
               </Text>
             </View>
           )
